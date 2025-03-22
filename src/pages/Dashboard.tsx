@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { FileUploader } from "@/components/FileUploader";
 import { FileList } from "@/components/FileList";
 import { EmbeddingVisualizer } from "@/components/EmbeddingVisualizer";
@@ -10,6 +10,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { processChatHistory } from "@/lib/fileProcessor";
+import { storageService } from "@/lib/storageService";
+import { Button } from "@/components/ui/button";
+import { 
+  Trash2, 
+  Download, 
+  Save, 
+  Database, 
+  FileUp, 
+  MessageSquare, 
+  BarChart2, 
+  Activity 
+} from "lucide-react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const Dashboard = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -23,6 +44,54 @@ const Dashboard = () => {
   const [visualizationData, setVisualizationData] = useState<any[]>([]);
   const { toast } = useToast();
 
+  // Load data from storage on component mount
+  useEffect(() => {
+    const loadFromStorage = () => {
+      const savedFiles = storageService.loadFiles();
+      const savedMessages = storageService.loadMessages();
+      const savedStats = storageService.loadStats();
+      const savedVisualizationData = storageService.loadVisualizationData();
+
+      if (savedFiles.length > 0) {
+        setFiles(savedFiles);
+      }
+      
+      if (savedMessages.length > 0) {
+        setMessages(savedMessages);
+      }
+      
+      if (savedStats.totalFiles > 0 || savedStats.totalMessages > 0) {
+        setStats(savedStats);
+      }
+      
+      if (savedVisualizationData.length > 0) {
+        setVisualizationData(savedVisualizationData);
+      }
+    };
+
+    loadFromStorage();
+  }, []);
+
+  // Save data to storage when it changes
+  useEffect(() => {
+    // Only save if there's data to save
+    if (files.length > 0) {
+      storageService.saveFiles(files);
+    }
+    
+    if (messages.length > 0) {
+      storageService.saveMessages(messages);
+    }
+    
+    if (stats.totalFiles > 0 || stats.totalMessages > 0) {
+      storageService.saveStats(stats);
+    }
+    
+    if (visualizationData.length > 0) {
+      storageService.saveVisualizationData(visualizationData);
+    }
+  }, [files, messages, stats, visualizationData]);
+
   const handleFilesAdded = useCallback(async (newFiles: File[], isFolder: boolean) => {
     const fileEntries = newFiles.map(file => ({
       id: crypto.randomUUID(),
@@ -30,7 +99,8 @@ const Dashboard = () => {
       size: file.size,
       type: file.type,
       status: 'pending' as const,
-      progress: 0
+      progress: 0,
+      timestamp: new Date()
     }));
     
     setFiles(prev => [...prev, ...fileEntries]);
@@ -122,16 +192,127 @@ const Dashboard = () => {
     });
   }, [toast]);
 
+  const handleClearAllData = useCallback(() => {
+    storageService.clearAll();
+    setFiles([]);
+    setMessages([]);
+    setVisualizationData([]);
+    setStats({
+      totalFiles: 0,
+      processedFiles: 0,
+      totalMessages: 0,
+      processedMessages: 0,
+    });
+    
+    toast({
+      title: "All data cleared",
+      description: "All files, messages, and visualization data have been cleared",
+    });
+  }, [toast]);
+
+  const handleExportData = useCallback(() => {
+    try {
+      const exportData = {
+        files,
+        messages,
+        visualizationData,
+        stats
+      };
+      
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `vector-knowledge-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+      
+      toast({
+        title: "Data exported successfully",
+        description: "All data has been exported to a JSON file",
+      });
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      toast({
+        title: "Error exporting data",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
+    }
+  }, [files, messages, visualizationData, stats, toast]);
+
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-2xl font-bold">Vector Knowledge Dashboard</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Vector Knowledge Dashboard</h1>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportData}
+            title="Export all data"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="destructive"
+                size="sm"
+                title="Clear all data"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear Data
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Clear All Data</DialogTitle>
+                <DialogDescription>
+                  This will permanently delete all files, messages, and visualization data.
+                  This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="destructive"
+                  onClick={handleClearAllData}
+                >
+                  Yes, Clear All Data
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
       
       <Tabs defaultValue="upload">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="upload">Upload</TabsTrigger>
-          <TabsTrigger value="messages">Messages</TabsTrigger>
-          <TabsTrigger value="visualization">Visualization</TabsTrigger>
-          <TabsTrigger value="stats">Statistics</TabsTrigger>
+          <TabsTrigger value="upload">
+            <FileUp className="h-4 w-4 mr-2" />
+            Upload
+          </TabsTrigger>
+          <TabsTrigger value="messages">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Messages
+          </TabsTrigger>
+          <TabsTrigger value="visualization">
+            <BarChart2 className="h-4 w-4 mr-2" />
+            Visualization
+          </TabsTrigger>
+          <TabsTrigger value="stats">
+            <Activity className="h-4 w-4 mr-2" />
+            Statistics
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="upload" className="space-y-4">
@@ -217,6 +398,23 @@ const Dashboard = () => {
                   <h3 className="font-medium text-sm text-muted-foreground">Processed Messages</h3>
                   <p className="text-2xl font-bold">{stats.processedMessages}</p>
                 </div>
+              </div>
+              
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-3">Estimated Storage Usage</h3>
+                <div className="p-4 border rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Local Storage</span>
+                    <span className="text-sm font-medium">
+                      {Math.round((JSON.stringify(messages).length + 
+                                  JSON.stringify(files).length + 
+                                  JSON.stringify(visualizationData).length) / 1024)} KB
+                    </span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Note: Browser local storage is limited to ~5MB. For larger datasets, consider using a database solution.
+                </p>
               </div>
             </CardContent>
           </Card>

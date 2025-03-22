@@ -16,6 +16,20 @@ export interface Message {
     category?: string;
     keywords?: string[];
     year?: number;
+    quarter?: string;
+    department?: string;
+    priority?: string;
+    status?: string;
+    dueDate?: string;
+    assignee?: string;
+    lastModified?: Date;
+    relationId?: string;
+    parentTask?: string;
+    dependsOn?: string[];
+    blockedBy?: string[];
+    estimatedHours?: number;
+    actualHours?: number;
+    completionPercentage?: number;
   };
 }
 
@@ -47,6 +61,7 @@ export interface UploadedFile {
   progress: number;
   messagesCount?: number;
   error?: string;
+  timestamp: Date;
 }
 
 export interface UploadStats {
@@ -80,4 +95,16 @@ export interface MessageTableFilters {
   year?: number[];
   tags?: string[];
   search?: string;
+  department?: string[];
+  priority?: string[];
+  status?: string[];
+  category?: string[];
 }
+
+// Local storage keys
+export const STORAGE_KEYS = {
+  FILES: 'vector-knowledge-files',
+  MESSAGES: 'vector-knowledge-messages',
+  VISUALIZATION_DATA: 'vector-knowledge-visualization',
+  STATS: 'vector-knowledge-stats'
+};

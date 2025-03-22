@@ -127,11 +127,38 @@ function extractFileMetadata(filename: string, chatData: any): Record<string, an
   if (chatData.title) {
     metadata.project = metadata.project || chatData.title;
   }
+
+  // Try to extract creation date from filename or metadata
+  const dateMatch = filename.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (dateMatch) {
+    const [_, year, month, day] = dateMatch;
+    metadata.year = parseInt(year);
+    
+    // Determine quarter
+    const monthNum = parseInt(month);
+    if (monthNum <= 3) metadata.quarter = 'Q1';
+    else if (monthNum <= 6) metadata.quarter = 'Q2';
+    else if (monthNum <= 9) metadata.quarter = 'Q3';
+    else metadata.quarter = 'Q4';
+  }
+  
+  // Extract create time from chat data if available
+  if (chatData.create_time && typeof chatData.create_time === 'number') {
+    const date = new Date(chatData.create_time * 1000);
+    metadata.year = date.getFullYear();
+    
+    // Determine quarter
+    const month = date.getMonth() + 1;
+    if (month <= 3) metadata.quarter = 'Q1';
+    else if (month <= 6) metadata.quarter = 'Q2';
+    else if (month <= 9) metadata.quarter = 'Q3';
+    else metadata.quarter = 'Q4';
+  }
   
   return metadata;
 }
 
-// Extract metadata from message content using basic NLP techniques
+// Extract metadata from message content using enhanced NLP techniques
 function extractMessageMetadata(content: string, role: string): Record<string, any> {
   const metadata: Record<string, any> = {};
   const lowerContent = content.toLowerCase();
@@ -172,6 +199,68 @@ function extractMessageMetadata(content: string, role: string): Record<string, a
     metadata.year = parseInt(yearMatches[0]);
   }
   
+  // Extract priority information
+  const priorityMatch = lowerContent.match(/priority[:\s]+([^.,\n]+)/i);
+  if (priorityMatch && priorityMatch[1]) {
+    metadata.priority = priorityMatch[1].trim();
+  } else if (lowerContent.includes("high priority") || lowerContent.includes("urgent")) {
+    metadata.priority = "high";
+  } else if (lowerContent.includes("medium priority")) {
+    metadata.priority = "medium";
+  } else if (lowerContent.includes("low priority")) {
+    metadata.priority = "low";
+  }
+  
+  // Extract status information
+  const statusMatch = lowerContent.match(/status[:\s]+([^.,\n]+)/i);
+  if (statusMatch && statusMatch[1]) {
+    metadata.status = statusMatch[1].trim();
+  } else if (lowerContent.includes("completed") || lowerContent.includes("done")) {
+    metadata.status = "completed";
+  } else if (lowerContent.includes("in progress") || lowerContent.includes("ongoing")) {
+    metadata.status = "in progress";
+  } else if (lowerContent.includes("pending") || lowerContent.includes("to do")) {
+    metadata.status = "pending";
+  }
+  
+  // Extract department information
+  const departmentMatch = lowerContent.match(/department[:\s]+([^.,\n]+)/i);
+  if (departmentMatch && departmentMatch[1]) {
+    metadata.department = departmentMatch[1].trim();
+  } else if (lowerContent.includes("engineering") || lowerContent.includes("development")) {
+    metadata.department = "engineering";
+  } else if (lowerContent.includes("marketing")) {
+    metadata.department = "marketing";
+  } else if (lowerContent.includes("sales")) {
+    metadata.department = "sales";
+  } else if (lowerContent.includes("design")) {
+    metadata.department = "design";
+  } else if (lowerContent.includes("product")) {
+    metadata.department = "product";
+  } else if (lowerContent.includes("hr") || lowerContent.includes("human resources")) {
+    metadata.department = "hr";
+  }
+  
+  // Extract category information
+  const categoryMatch = lowerContent.match(/category[:\s]+([^.,\n]+)/i);
+  if (categoryMatch && categoryMatch[1]) {
+    metadata.category = categoryMatch[1].trim();
+  } else if (lowerContent.includes("feature")) {
+    metadata.category = "feature";
+  } else if (lowerContent.includes("bug")) {
+    metadata.category = "bug";
+  } else if (lowerContent.includes("enhancement")) {
+    metadata.category = "enhancement";
+  } else if (lowerContent.includes("documentation")) {
+    metadata.category = "documentation";
+  }
+  
+  // Extract estimated hours
+  const estimatedHoursMatch = content.match(/estimated(?:\s+time|\s+hours)?[:\s]+(\d+(?:\.\d+)?)/i);
+  if (estimatedHoursMatch && estimatedHoursMatch[1]) {
+    metadata.estimatedHours = parseFloat(estimatedHoursMatch[1]);
+  }
+  
   // If no tags were found, try to extract keywords
   if (!metadata.tags) {
     const keywords = extractKeywords(content);
@@ -183,20 +272,51 @@ function extractMessageMetadata(content: string, role: string): Record<string, a
   return metadata;
 }
 
-// Simple keyword extraction (in a real app, you'd use a more sophisticated NLP approach)
+// Enhanced keyword extraction with expanded technical terms
 function extractKeywords(text: string): string[] {
   // List of common technical terms to look for
   const technicalTerms = [
+    // Technical
     'api', 'code', 'data', 'file', 'function', 'server', 'client',
     'database', 'web', 'cloud', 'security', 'network', 'storage',
     'config', 'deploy', 'docker', 'kubernetes', 'aws', 'azure',
-    'react', 'angular', 'vue', 'node', 'python', 'java', 'javascript'
+    'react', 'angular', 'vue', 'node', 'python', 'java', 'javascript',
+    'ai', 'ml', 'analytics', 'algorithm', 'architecture', 'automation',
+    'backend', 'frontend', 'fullstack', 'devops', 'microservice', 
+    'infrastructure', 'scaling', 'testing', 'monitoring',
+    
+    // Business
+    'strategy', 'roadmap', 'milestone', 'objective', 'kpi', 'metric',
+    'budget', 'cost', 'revenue', 'profit', 'market', 'customer',
+    'presentation', 'report', 'analysis', 'forecast', 'planning',
+    
+    // Project management
+    'task', 'project', 'sprint', 'backlog', 'priority', 'deadline',
+    'meeting', 'review', 'feedback', 'stakeholder', 'requirement',
+    'agile', 'scrum', 'kanban', 'waterfall', 'milestone',
+    
+    // Communication
+    'email', 'slack', 'teams', 'chat', 'call', 'interview', 'discussion',
+    'presentation', 'documentation', 'wiki', 'knowledge base'
   ];
   
   const words = text.toLowerCase().split(/\W+/);
   const keywords = technicalTerms.filter(term => words.includes(term));
   
-  return [...new Set(keywords)]; // Remove duplicates
+  // Extract multi-word technical phrases
+  const phrases = [
+    'machine learning', 'deep learning', 'neural network', 'natural language processing',
+    'data science', 'data analysis', 'data engineering', 'business intelligence',
+    'project management', 'product development', 'user experience', 'user interface',
+    'continuous integration', 'continuous deployment', 'version control',
+    'artificial intelligence', 'business strategy', 'market analysis'
+  ];
+  
+  const lowerText = text.toLowerCase();
+  const foundPhrases = phrases.filter(phrase => lowerText.includes(phrase));
+  
+  // Combine single words and phrases, remove duplicates
+  return [...new Set([...keywords, ...foundPhrases])];
 }
 
 // Extract messages from potentially nested structure - Improved for ChatGPT exports

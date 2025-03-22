@@ -3,7 +3,8 @@ import React from "react";
 import { UploadedFile } from "@/lib/types";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, AlertCircle, RefreshCw } from "lucide-react";
+import { CheckCircle, XCircle, RefreshCw, Calendar } from "lucide-react";
+import { format } from "date-fns";
 
 interface FileListProps {
   files: UploadedFile[];
@@ -40,11 +41,17 @@ export function FileList({ files, onClearCompleted, onRetry }: FileListProps) {
                 <p className="text-xs text-muted-foreground">
                   {(file.size / 1024).toFixed(2)} KB
                 </p>
-                {file.messagesCount !== undefined && (
+                <div className="flex items-center gap-1">
+                  {file.messagesCount !== undefined && (
+                    <p className="text-xs text-muted-foreground mr-2">
+                      {file.messagesCount} messages
+                    </p>
+                  )}
+                  <Calendar className="h-3 w-3 text-muted-foreground" />
                   <p className="text-xs text-muted-foreground">
-                    {file.messagesCount} messages
+                    {format(file.timestamp, "MMM d, yyyy h:mm a")}
                   </p>
-                )}
+                </div>
               </div>
             </div>
           </div>
