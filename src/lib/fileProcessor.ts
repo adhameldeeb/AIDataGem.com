@@ -40,6 +40,9 @@ export async function processChatHistory(
           throw new Error("No valid messages found in file");
         }
         
+        // Extract metadata from file name and content
+        const fileMetadata = extractFileMetadata(file.name, chatData);
+        
         // Process messages and generate embeddings
         const processedMessages: Message[] = [];
         const visualizationPoints: EmbeddingVisualizationData[] = [];
@@ -50,13 +53,23 @@ export async function processChatHistory(
           // Generate embedding
           const embedding = vectorDb.generateEmbedding(message.content);
           
+          // Extract message-specific metadata
+          const messageMetadata = extractMessageMetadata(message.content, message.role);
+          
+          // Merge file-level and message-level metadata
+          const combinedMetadata = {
+            ...fileMetadata,
+            ...messageMetadata
+          };
+          
           // Create proper message object
           const processedMessage: Message = {
             id: message.id || crypto.randomUUID(),
             role: message.role || "user",
             content: message.content,
             timestamp: message.timestamp ? new Date(message.timestamp) : new Date(),
-            embedding
+            embedding,
+            metadata: Object.keys(combinedMetadata).length > 0 ? combinedMetadata : undefined
           };
           
           // Create visualization point using PCA-like dimension reduction
@@ -97,6 +110,93 @@ export async function processChatHistory(
     
     reader.readAsText(file);
   });
+}
+
+// Extract metadata from filename and chat data
+function extractFileMetadata(filename: string, chatData: any): Record<string, any> {
+  const metadata: Record<string, any> = {};
+  
+  // Extract project from filename if it contains a recognizable pattern
+  const filenameMatch = filename.match(/ChatGPT_\d{4}-\d{2}-\d{2}_(.+)\.json/);
+  if (filenameMatch && filenameMatch[1]) {
+    const projectName = filenameMatch[1].replace(/_/g, ' ');
+    metadata.project = projectName;
+  }
+  
+  // Extract data from chat title if available
+  if (chatData.title) {
+    metadata.project = metadata.project || chatData.title;
+  }
+  
+  return metadata;
+}
+
+// Extract metadata from message content using basic NLP techniques
+function extractMessageMetadata(content: string, role: string): Record<string, any> {
+  const metadata: Record<string, any> = {};
+  const lowerContent = content.toLowerCase();
+  
+  // Extract potential tags (words with # prefix or keywords)
+  const tagMatches = content.match(/#[a-zA-Z0-9_]+/g);
+  if (tagMatches && tagMatches.length > 0) {
+    metadata.tags = tagMatches.map(tag => tag.substring(1));
+  }
+  
+  // Look for project information
+  const projectMatch = lowerContent.match(/project[:\s]+([^.,\n]+)/i);
+  if (projectMatch && projectMatch[1]) {
+    metadata.project = projectMatch[1].trim();
+  }
+  
+  // Look for owner information
+  const ownerMatch = lowerContent.match(/(?:owner|by)[:\s]+([^.,\n]+)/i);
+  if (ownerMatch && ownerMatch[1]) {
+    metadata.owner = ownerMatch[1].trim();
+  }
+  
+  // Look for task manager
+  const taskManagerMatch = lowerContent.match(/(?:task manager|manager)[:\s]+([^.,\n]+)/i);
+  if (taskManagerMatch && taskManagerMatch[1]) {
+    metadata.taskManager = taskManagerMatch[1].trim();
+  }
+  
+  // Look for task owner
+  const taskOwnerMatch = lowerContent.match(/task owner[:\s]+([^.,\n]+)/i);
+  if (taskOwnerMatch && taskOwnerMatch[1]) {
+    metadata.taskOwner = taskOwnerMatch[1].trim();
+  }
+  
+  // Extract year mentions
+  const yearMatches = content.match(/\b(20\d{2})\b/g);
+  if (yearMatches && yearMatches.length > 0) {
+    metadata.year = parseInt(yearMatches[0]);
+  }
+  
+  // If no tags were found, try to extract keywords
+  if (!metadata.tags) {
+    const keywords = extractKeywords(content);
+    if (keywords.length > 0) {
+      metadata.tags = keywords;
+    }
+  }
+  
+  return metadata;
+}
+
+// Simple keyword extraction (in a real app, you'd use a more sophisticated NLP approach)
+function extractKeywords(text: string): string[] {
+  // List of common technical terms to look for
+  const technicalTerms = [
+    'api', 'code', 'data', 'file', 'function', 'server', 'client',
+    'database', 'web', 'cloud', 'security', 'network', 'storage',
+    'config', 'deploy', 'docker', 'kubernetes', 'aws', 'azure',
+    'react', 'angular', 'vue', 'node', 'python', 'java', 'javascript'
+  ];
+  
+  const words = text.toLowerCase().split(/\W+/);
+  const keywords = technicalTerms.filter(term => words.includes(term));
+  
+  return [...new Set(keywords)]; // Remove duplicates
 }
 
 // Extract messages from potentially nested structure - Improved for ChatGPT exports

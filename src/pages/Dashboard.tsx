@@ -3,8 +3,9 @@ import React, { useState, useCallback } from "react";
 import { FileUploader } from "@/components/FileUploader";
 import { FileList } from "@/components/FileList";
 import { EmbeddingVisualizer } from "@/components/EmbeddingVisualizer";
+import { MessageTable } from "@/components/MessageTable";
 import { UploadProgress } from "@/components/UploadProgress";
-import { UploadedFile, UploadStats } from "@/lib/types";
+import { UploadedFile, UploadStats, Message } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
@@ -12,6 +13,7 @@ import { processChatHistory } from "@/lib/fileProcessor";
 
 const Dashboard = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [stats, setStats] = useState<UploadStats>({
     totalFiles: 0,
     processedFiles: 0,
@@ -68,6 +70,9 @@ const Dashboard = () => {
           } : f)
         );
 
+        // Update messages state
+        setMessages(prev => [...prev, ...messages]);
+
         // Update stats
         setStats(prev => ({
           ...prev,
@@ -122,8 +127,9 @@ const Dashboard = () => {
       <h1 className="text-2xl font-bold">Vector Knowledge Dashboard</h1>
       
       <Tabs defaultValue="upload">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="upload">Upload</TabsTrigger>
+          <TabsTrigger value="messages">Messages</TabsTrigger>
           <TabsTrigger value="visualization">Visualization</TabsTrigger>
           <TabsTrigger value="stats">Statistics</TabsTrigger>
         </TabsList>
@@ -153,6 +159,20 @@ const Dashboard = () => {
                 onClearCompleted={handleClearCompleted} 
                 onRetry={handleRetry}
               />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="messages">
+          <Card>
+            <CardHeader>
+              <CardTitle>Message Data</CardTitle>
+              <CardDescription>
+                Search, filter, and analyze message content from your chat history.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0 sm:p-6">
+              <MessageTable messages={messages} />
             </CardContent>
           </Card>
         </TabsContent>

@@ -6,7 +6,17 @@ export interface Message {
   role: MessageRole;
   content: string;
   timestamp: Date;
-  embedding?: number[]; // Vector embedding for the message content
+  embedding?: number[];
+  metadata?: {
+    project?: string;
+    tags?: string[];
+    owner?: string;
+    taskManager?: string;
+    taskOwner?: string;
+    category?: string;
+    keywords?: string[];
+    year?: number;
+  };
 }
 
 export interface ChatState {
@@ -53,4 +63,21 @@ export interface EmbeddingVisualizationData {
   group: MessageRole;
   content: string;
   similarity?: number;
+}
+
+export interface FilterOption {
+  value: string;
+  label: string;
+  count: number;
+}
+
+export interface MessageTableFilters {
+  role?: MessageRole[];
+  project?: string[];
+  owner?: string[];
+  taskManager?: string[];
+  taskOwner?: string[];
+  year?: number[];
+  tags?: string[];
+  search?: string;
 }

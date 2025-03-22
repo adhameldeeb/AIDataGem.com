@@ -101,6 +101,7 @@ export function FileUploader({ onFilesAdded }: FileUploaderProps) {
         <Info className="h-4 w-4" />
         <AlertDescription>
           Supports ChatGPT exports (.json files). Both the standard format and conversations with "mapping" structure are supported.
+          The system will extract metadata like projects, tags, owners, and dates.
         </AlertDescription>
       </Alert>
       
