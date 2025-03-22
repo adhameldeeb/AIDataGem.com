@@ -4,7 +4,7 @@ import { MessageList } from "@/components/MessageList";
 import { ChatInput } from "@/components/ChatInput";
 import { useChat } from "@/lib/hooks";
 import { Link } from "react-router-dom";
-import { BarChart, Layers, Zap } from "lucide-react";
+import { BarChart, Layers, Zap, Hourglass, Rabbit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
@@ -25,6 +25,14 @@ const Index = () => {
           </Link>
         </div>
         
+        <div className="prose dark:prose-invert max-w-none mb-6">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            <em>Imagine standing at the entrance of the world's most extensive library. Every book, document, and scrap of 
+            knowledge is at your fingertips—not in days or hours, but in milliseconds. This isn't just search; 
+            it's a journey into the depths of connected knowledge.</em>
+          </p>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div className="flex items-start space-x-2">
             <Layers className="h-5 w-5 text-purple-500 mt-0.5" />
@@ -42,7 +50,7 @@ const Index = () => {
             </svg>
             <div>
               <h3 className="font-medium">Unified Embedding Space</h3>
-              <p className="text-sm text-muted-foreground">1024-dimensional vector space across platforms</p>
+              <p className="text-sm text-muted-foreground">1024-dimensional vector space capturing nuanced semantics</p>
             </div>
           </div>
           
@@ -52,6 +60,37 @@ const Index = () => {
               <h3 className="font-medium">Cross-Platform Synthesis</h3>
               <p className="text-sm text-muted-foreground">Intelligent information fusion from multiple sources</p>
             </div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 bg-muted/40 p-4 rounded-lg border">
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-amber-500">
+                <path d="M19 9c0 0-1 -5.125 -1 -6c0 -1 -1 -1 -1 -1h-8s-1 0 -1 1c0 .99 -1 6 -1 6"></path>
+                <path d="M11 12v4"></path>
+                <path d="M18 12c-.948 0 -1.61 1.714 -2 4c-.384 2.24 .132 1.992 3 2"></path>
+                <path d="M6 12c.948 0 1.61 1.714 2 4c.384 2.24 -.132 1.992 -3 2"></path>
+                <path d="M17 6h-10l-2 6h14l-2 -6z"></path>
+              </svg>
+              <h3 className="font-medium">Deep Rabbit Hole Investigations</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              What once took researchers days or weeks now takes <span className="font-semibold">minutes</span>. 
+              Follow complex knowledge trails through interconnected information landscapes with our 
+              proprietary tunneling algorithms.
+            </p>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Hourglass className="h-5 w-5 text-rose-500" />
+              <h3 className="font-medium">Millisecond Response Rates</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Enhanced with rich metadata including sentiment analysis, cultural context, 
+              and specialized domain knowledge—all delivered in the time it takes to blink.
+            </p>
           </div>
         </div>
       </div>
