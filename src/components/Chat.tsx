@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { MessageList } from "./MessageList";
 import { ChatInput } from "./ChatInput";
-import { Message, MessageRole } from "@/lib/types";
+import { Message } from "@/lib/types";
 
 export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -19,7 +19,7 @@ export function Chat() {
       timestamp: new Date(),
       metadata: {
         owner: "User",
-        project: "datafromai.com",
+        project: "aidatagem.com",
         tags: ["query", "user-input"],
         department: "Customer",
         conversationId: "live-session"
@@ -44,7 +44,7 @@ export function Chat() {
         timestamp: new Date(),
         metadata: {
           owner: "AI Assistant",
-          project: "datafromai.com",
+          project: "aidatagem.com",
           tags: ["response", "ai-generated"],
           department: "AI",
           conversationId: "live-session"
@@ -63,8 +63,8 @@ export function Chat() {
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background border rounded-lg shadow-sm">
       <div className="border-b px-4 py-2">
-        <h2 className="text-lg font-semibold">DataFromAI Chat</h2>
-        <p className="text-sm text-muted-foreground">Ask questions about your data</p>
+        <h2 className="text-lg font-semibold">AIDatagem Chat</h2>
+        <p className="text-sm text-muted-foreground">Unlock the hidden gems in your data</p>
       </div>
       
       <div className="flex-1 overflow-hidden flex flex-col">
@@ -75,25 +75,25 @@ export function Chat() {
   );
 }
 
-// Simple AI response generator for demonstration
+// AI response generator with AIDatagem messaging
 function generateAIResponse(userInput: string): string {
   const lowercaseInput = userInput.toLowerCase();
   
   if (lowercaseInput.includes("hello") || lowercaseInput.includes("hi")) {
-    return "Hello! I'm your DataFromAI assistant. How can I help you analyze your data today?";
+    return "Hello! I'm your AIDatagem assistant. How can I help you discover valuable insights from your data today?";
   }
   
   if (lowercaseInput.includes("data") || lowercaseInput.includes("analytics")) {
-    return "DataFromAI provides advanced analytics with natural language processing. You can ask questions about your data, and I'll help you extract insights, generate visualizations, and identify patterns or anomalies.";
+    return "AIDatagem transforms raw data into valuable gems of insight. Our advanced AI analyzes your data to extract valuable patterns, trends, and actionable intelligence that would otherwise remain hidden.";
   }
   
   if (lowercaseInput.includes("embed") || lowercaseInput.includes("vector")) {
-    return "Our system uses state-of-the-art embedding techniques to convert your text and data into rich vector representations. This allows for semantic search, similarity matching, and contextual understanding of your information.";
+    return "Our gem-cutting technology uses state-of-the-art vector embeddings to transform your unstructured data into multidimensional representations. This allows for semantic search, similarity matching, and deep contextual understanding of your information assets.";
   }
   
   if (lowercaseInput.includes("feature") || lowercaseInput.includes("capability")) {
-    return "DataFromAI offers several key features:\n\n1. Natural language data querying\n2. Automated insights generation\n3. Vector embeddings for semantic search\n4. Contextual memory of previous interactions\n5. Multi-format data integration\n6. Customizable visualization generation";
+    return "AIDatagem offers several key features:\n\n1. Semantic data mining with natural language queries\n2. Automated insight extraction and gem identification\n3. Multi-dimensional vector embedding for precise search\n4. Contextual memory across your entire data landscape\n5. Rich metadata tagging and classification\n6. Interactive visualization of data relationships";
   }
   
-  return "I understand you're interested in AI-powered data analysis. DataFromAI specializes in making your data accessible through natural language. What specific insights are you looking to gain from your data?";
+  return "AIDatagem specializes in cutting through the noise to find the true gems in your data. Our AI systems can process, analyze, and extract valuable insights from complex datasets, making the hidden value in your information accessible and actionable. What specific insights are you looking to uncover?";
 }

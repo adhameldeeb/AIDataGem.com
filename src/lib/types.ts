@@ -30,6 +30,9 @@ export interface Message {
     estimatedHours?: number;
     actualHours?: number;
     completionPercentage?: number;
+    conversationId?: string;
+    threadId?: string;
+    sourceFile?: string;
   };
 }
 
