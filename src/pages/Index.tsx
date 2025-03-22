@@ -1,11 +1,17 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from "react";
+import { MessageList } from "@/components/MessageList";
+import { ChatInput } from "@/components/ChatInput";
+import { useChat } from "@/lib/hooks";
 
 const Index = () => {
+  const { messages, isLoading, sendMessage } = useChat();
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="flex flex-col w-full h-full max-w-5xl mx-auto bg-card shadow-sm">
+      <div className="relative flex flex-col flex-1 overflow-hidden">
+        <MessageList messages={messages} isLoading={isLoading} />
+        <ChatInput onSend={sendMessage} isLoading={isLoading} />
       </div>
     </div>
   );
