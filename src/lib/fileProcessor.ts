@@ -73,6 +73,7 @@ export async function processChatHistory(
         
         resolve({ messages: processedMessages, visualizationPoints });
       } catch (error) {
+        console.error("Error parsing file:", error);
         reject(error);
       }
     };
@@ -85,28 +86,89 @@ export async function processChatHistory(
   });
 }
 
-// Extract messages from potentially nested structure
+// Extract messages from potentially nested structure - Improved for ChatGPT exports
 function extractMessages(data: any): any[] {
+  // Add debug logging
+  console.log("Extracting messages from data structure:", JSON.stringify(data).substring(0, 500) + "...");
+  
+  // Handle ChatGPT export format directly
+  if (data.mapping && typeof data.mapping === 'object') {
+    console.log("ChatGPT export format detected with mapping object");
+    const messages: any[] = [];
+    
+    // Process each conversation node in the mapping
+    for (const nodeId in data.mapping) {
+      const node = data.mapping[nodeId];
+      
+      if (node && node.message && typeof node.message === 'object') {
+        const message = node.message;
+        
+        // Skip if not a content message
+        if (!message.content || !message.content.parts) continue;
+        
+        // Get the content from parts array and join if needed
+        const contentParts = message.content.parts || [];
+        const content = contentParts.join("\n").trim();
+        
+        if (content) {
+          messages.push({
+            id: nodeId,
+            role: message.author?.role || "user",
+            content: content,
+            timestamp: message.create_time ? new Date(message.create_time * 1000) : new Date()
+          });
+        }
+      }
+    }
+    
+    console.log(`Found ${messages.length} messages in ChatGPT export format`);
+    if (messages.length > 0) return messages;
+  }
+  
+  // Handle conversation array format
+  if (data.conversations && Array.isArray(data.conversations)) {
+    console.log("Conversations array format detected");
+    return data.conversations.flatMap((conversation: any) => {
+      if (conversation.messages && Array.isArray(conversation.messages)) {
+        return conversation.messages.map((msg: any) => ({
+          id: msg.id || crypto.randomUUID(),
+          role: msg.role || "user",
+          content: typeof msg.content === 'string' ? msg.content : 
+                   (msg.content?.parts ? msg.content.parts.join("\n") : ""),
+          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+        }));
+      }
+      return [];
+    });
+  }
+  
+  // Standard array of messages format
   if (Array.isArray(data)) {
     if (data.length > 0 && data[0].content && typeof data[0].content === 'string') {
-      // It's likely an array of messages
+      console.log("Standard array of messages format detected");
       return data;
     } else {
       // Try to find messages in the array items
+      console.log("Searching through array items for messages");
       return data.flatMap(item => extractMessages(item));
     }
   } else if (typeof data === 'object' && data !== null) {
+    // Try specific known properties
     if (data.messages && Array.isArray(data.messages)) {
+      console.log("Found messages array property");
       return data.messages;
     } else if (data.content && typeof data.content === 'string') {
       // This might be a single message
+      console.log("Found single message object");
       return [data];
     } else {
       // Try all object properties
+      console.log("Searching through all object properties for messages");
       return Object.values(data).flatMap(value => extractMessages(value));
     }
   }
   
+  console.log("No messages found in current data structure");
   return [];
 }
 

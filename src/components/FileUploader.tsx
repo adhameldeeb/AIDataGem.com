@@ -1,7 +1,8 @@
 
 import React, { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Folder } from "lucide-react";
+import { Upload, Folder, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface FileUploaderProps {
   onFilesAdded: (files: File[], isFolder: boolean) => void;
@@ -81,6 +82,13 @@ export function FileUploader({ onFilesAdded }: FileUploaderProps) {
 
   return (
     <div className="space-y-4">
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          Supports ChatGPT exports (.json files). Both the standard format and conversations with "mapping" structure are supported.
+        </AlertDescription>
+      </Alert>
+      
       <div 
         className={`border-2 border-dashed rounded-lg p-6 text-center ${
           isDragging ? 'border-primary bg-primary/10' : 'border-muted-foreground/20'
