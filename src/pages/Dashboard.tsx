@@ -1,10 +1,11 @@
-
 import React, { useState, useCallback, useEffect } from "react";
 import { FileUploader } from "@/components/FileUploader";
 import { FileList } from "@/components/FileList";
 import { EmbeddingVisualizer } from "@/components/EmbeddingVisualizer";
 import { MessageTable } from "@/components/MessageTable";
+import { ThreadedMessageView } from "@/components/ThreadedMessageView";
 import { UploadProgress } from "@/components/UploadProgress";
+import { Chat } from "@/components/Chat";
 import { UploadedFile, UploadStats, Message } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,11 +17,12 @@ import {
   Trash2, 
   Download, 
   Save, 
-  Database, 
   FileUp, 
   MessageSquare, 
   BarChart2, 
-  Activity 
+  Activity,
+  ListTree,
+  MessageCircle
 } from "lucide-react";
 import { 
   Dialog,
@@ -44,7 +46,6 @@ const Dashboard = () => {
   const [visualizationData, setVisualizationData] = useState<any[]>([]);
   const { toast } = useToast();
 
-  // Load data from storage on component mount
   useEffect(() => {
     const loadFromStorage = () => {
       const savedFiles = storageService.loadFiles();
@@ -72,9 +73,7 @@ const Dashboard = () => {
     loadFromStorage();
   }, []);
 
-  // Save data to storage when it changes
   useEffect(() => {
-    // Only save if there's data to save
     if (files.length > 0) {
       storageService.saveFiles(files);
     }
@@ -114,7 +113,6 @@ const Dashboard = () => {
       description: `Processing ${fileEntries.length} files`,
     });
 
-    // Process each file
     for (let i = 0; i < newFiles.length; i++) {
       const file = newFiles[i];
       const fileEntry = fileEntries[i];
@@ -130,7 +128,6 @@ const Dashboard = () => {
           );
         });
 
-        // Update file status
         setFiles(prev => 
           prev.map(f => f.id === fileEntry.id ? { 
             ...f, 
@@ -140,10 +137,8 @@ const Dashboard = () => {
           } : f)
         );
 
-        // Update messages state
         setMessages(prev => [...prev, ...messages]);
 
-        // Update stats
         setStats(prev => ({
           ...prev,
           processedFiles: prev.processedFiles + 1,
@@ -151,7 +146,6 @@ const Dashboard = () => {
           processedMessages: prev.processedMessages + messages.length
         }));
 
-        // Update visualization data
         setVisualizationData(prev => [...prev, ...visualizationPoints]);
 
         toast({
@@ -185,7 +179,6 @@ const Dashboard = () => {
     setFiles(prev => 
       prev.map(f => f.id === fileId ? { ...f, status: 'pending', progress: 0, error: undefined } : f)
     );
-    // In a real implementation, we would re-process the file here
     toast({
       title: "Retry not implemented",
       description: "This is just a demo of the retry functionality",
@@ -210,6 +203,14 @@ const Dashboard = () => {
     });
   }, [toast]);
 
+  const handleImportData = useCallback(() => {
+    // Implement import functionality here
+    toast({
+      title: "Import not implemented",
+      description: "This is just a demo of the import functionality",
+    });
+  }, [toast]);
+
   const handleExportData = useCallback(() => {
     try {
       const exportData = {
@@ -228,7 +229,6 @@ const Dashboard = () => {
       document.body.appendChild(a);
       a.click();
       
-      // Clean up
       setTimeout(() => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
@@ -253,6 +253,16 @@ const Dashboard = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Vector Knowledge Dashboard</h1>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleImportData}
+            title="Import data"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Import
+          </Button>
+          
           <Button
             variant="outline"
             size="sm"
@@ -296,7 +306,7 @@ const Dashboard = () => {
       </div>
       
       <Tabs defaultValue="upload">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="upload">
             <FileUp className="h-4 w-4 mr-2" />
             Upload
@@ -304,6 +314,14 @@ const Dashboard = () => {
           <TabsTrigger value="messages">
             <MessageSquare className="h-4 w-4 mr-2" />
             Messages
+          </TabsTrigger>
+          <TabsTrigger value="threads">
+            <ListTree className="h-4 w-4 mr-2" />
+            Threads
+          </TabsTrigger>
+          <TabsTrigger value="chat">
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Chat
           </TabsTrigger>
           <TabsTrigger value="visualization">
             <BarChart2 className="h-4 w-4 mr-2" />
@@ -354,6 +372,36 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent className="p-0 sm:p-6">
               <MessageTable messages={messages} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="threads">
+          <Card>
+            <CardHeader>
+              <CardTitle>Threaded Message View</CardTitle>
+              <CardDescription>
+                View messages in a threaded format.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ThreadedMessageView messages={messages} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="chat">
+          <Card>
+            <CardHeader>
+              <CardTitle>DataFromAI Chat</CardTitle>
+              <CardDescription>
+                Interact with your data using natural language queries
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="h-[600px]">
+                <Chat />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
