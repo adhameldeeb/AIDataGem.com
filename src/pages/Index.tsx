@@ -1,10 +1,9 @@
-
 import React from "react";
 import { MessageList } from "@/components/MessageList";
 import { ChatInput } from "@/components/ChatInput";
 import { useChat } from "@/lib/hooks";
 import { Link } from "react-router-dom";
-import { BarChart, Layers, Zap, Hourglass, Rabbit } from "lucide-react";
+import { BarChart, Layers, Zap, Hourglass, Rabbit, ArrowRight, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
@@ -91,6 +90,41 @@ const Index = () => {
               Enhanced with rich metadata including sentiment analysis, cultural context, 
               and specialized domain knowledge—all delivered in the time it takes to blink.
             </p>
+          </div>
+        </div>
+        
+        <div className="mt-4 p-4 rounded-lg border bg-amber-50/30 dark:bg-amber-900/10">
+          <div className="flex items-start space-x-3 mb-3">
+            <ClipboardCheck className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium text-amber-800 dark:text-amber-400">Independent Verification Needed</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                While our internal tests show promising results, we're actively seeking independent benchmarking 
+                to validate our performance claims across various knowledge domains and query complexities.
+              </p>
+              <div className="mt-3 flex flex-col space-y-2">
+                <div className="flex items-center text-xs">
+                  <span className="inline-block w-24 text-muted-foreground">Initial response:</span>
+                  <span className="font-medium">~150-300ms</span>
+                  <span className="text-xs text-muted-foreground ml-2">(preliminary, to be verified)</span>
+                </div>
+                <div className="flex items-center text-xs">
+                  <span className="inline-block w-24 text-muted-foreground">Deep exploration:</span>
+                  <span className="font-medium">3-5 minutes</span>
+                  <span className="text-xs text-muted-foreground ml-2">(vs. hours/days with traditional methods)</span>
+                </div>
+                <div className="flex items-center text-xs">
+                  <span className="inline-block w-24 text-muted-foreground">Accuracy:</span>
+                  <span className="font-medium">Under assessment</span>
+                </div>
+              </div>
+              <div className="mt-3">
+                <Button variant="outline" size="sm" className="text-xs h-7 bg-amber-100/50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-800/40">
+                  Join our benchmarking program
+                  <ArrowRight className="h-3 w-3 ml-1" />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
