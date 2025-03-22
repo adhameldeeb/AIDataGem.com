@@ -19,12 +19,24 @@ export async function processChatHistory(
         }
         
         const content = event.target.result as string;
-        const chatData = JSON.parse(content);
+        console.log("File content type:", typeof content);
+        console.log("File content length:", content.length);
+        
+        let chatData;
+        try {
+          chatData = JSON.parse(content);
+          console.log("Successfully parsed JSON");
+        } catch (parseError) {
+          console.error("JSON parse error:", parseError);
+          throw new Error(`Invalid JSON format: ${parseError.message}`);
+        }
         
         // Extract messages from potential nested structure
         const messages = extractMessages(chatData);
+        console.log("Extracted messages count:", messages.length);
         
         if (!messages || messages.length === 0) {
+          console.error("No messages found in file:", file.name);
           throw new Error("No valid messages found in file");
         }
         
@@ -48,7 +60,6 @@ export async function processChatHistory(
           };
           
           // Create visualization point using PCA-like dimension reduction
-          // This is a very simplified version for demonstration
           const [x, y] = simplifiedDimensionReduction(embedding);
           
           const visualPoint: EmbeddingVisualizationData = {
@@ -71,14 +82,16 @@ export async function processChatHistory(
           }
         }
         
+        console.log("Successfully processed all messages:", processedMessages.length);
         resolve({ messages: processedMessages, visualizationPoints });
       } catch (error) {
-        console.error("Error parsing file:", error);
+        console.error("Error processing file:", file.name, error);
         reject(error);
       }
     };
     
-    reader.onerror = () => {
+    reader.onerror = (event) => {
+      console.error("FileReader error:", event);
       reject(new Error("Error reading file"));
     };
     
@@ -89,9 +102,12 @@ export async function processChatHistory(
 // Extract messages from potentially nested structure - Improved for ChatGPT exports
 function extractMessages(data: any): any[] {
   // Add debug logging
-  console.log("Extracting messages from data structure:", JSON.stringify(data).substring(0, 500) + "...");
+  console.log("Extracting messages from data structure type:", typeof data);
+  if (typeof data === 'object') {
+    console.log("Object keys:", Object.keys(data));
+  }
   
-  // Handle ChatGPT export format directly
+  // Handle ChatGPT export format with mapping structure
   if (data.mapping && typeof data.mapping === 'object') {
     console.log("ChatGPT export format detected with mapping object");
     const messages: any[] = [];
@@ -103,25 +119,33 @@ function extractMessages(data: any): any[] {
       if (node && node.message && typeof node.message === 'object') {
         const message = node.message;
         
-        // Skip if not a content message
+        // Skip if not a content message or system hidden message
         if (!message.content || !message.content.parts) continue;
         
         // Get the content from parts array and join if needed
         const contentParts = message.content.parts || [];
         const content = contentParts.join("\n").trim();
         
-        if (content) {
-          messages.push({
-            id: nodeId,
-            role: message.author?.role || "user",
-            content: content,
-            timestamp: message.create_time ? new Date(message.create_time * 1000) : new Date()
-          });
-        }
+        // Skip empty messages
+        if (!content) continue;
+        
+        // Skip visually hidden messages (system messages that don't appear in chat)
+        if (message.metadata?.is_visually_hidden_from_conversation === true) continue;
+        
+        messages.push({
+          id: nodeId,
+          role: message.author?.role || "user",
+          content: content,
+          timestamp: message.create_time ? new Date(message.create_time * 1000) : new Date()
+        });
       }
     }
     
     console.log(`Found ${messages.length} messages in ChatGPT export format`);
+    
+    // Sort messages by timestamp
+    messages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    
     if (messages.length > 0) return messages;
   }
   
