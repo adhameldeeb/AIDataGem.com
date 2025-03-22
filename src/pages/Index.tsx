@@ -1,13 +1,39 @@
-import React from "react";
+import React, { useState } from "react";
 import { MessageList } from "@/components/MessageList";
 import { ChatInput } from "@/components/ChatInput";
 import { useChat } from "@/lib/hooks";
 import { Link } from "react-router-dom";
-import { BarChart, Layers, Zap, Hourglass, Rabbit, ArrowRight, ClipboardCheck } from "lucide-react";
+import { BarChart, Layers, Zap, Hourglass, Rabbit, ArrowRight, ClipboardCheck, Beaker, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const { messages, isLoading, sendMessage } = useChat();
+  const [email, setEmail] = useState("");
+  const [organization, setOrganization] = useState("");
+  const [useCase, setUseCase] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const { toast } = useToast();
+
+  const handleBenchmarkSignup = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Benchmark signup:", { email, organization, useCase });
+    setSubmitted(true);
+    toast({
+      title: "Benchmark application received",
+      description: "Thank you for your interest. We'll be in touch shortly.",
+    });
+    setTimeout(() => {
+      setSubmitted(false);
+      setEmail("");
+      setOrganization("");
+      setUseCase("");
+    }, 3000);
+  };
 
   return (
     <div className="flex flex-col w-full h-full max-w-5xl mx-auto bg-card shadow-sm">
@@ -119,10 +145,80 @@ const Index = () => {
                 </div>
               </div>
               <div className="mt-3">
-                <Button variant="outline" size="sm" className="text-xs h-7 bg-amber-100/50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-800/40">
-                  Join our benchmarking program
-                  <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs h-7 bg-amber-100/50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-800/40">
+                      Join our benchmarking program
+                      <ArrowRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Benchmark Application</DialogTitle>
+                      <DialogDescription>
+                        Join our beta benchmarking program. We're looking for organizations to help validate our platform's performance during our beta phase and as we approach production readiness.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleBenchmarkSignup}>
+                      <div className="grid gap-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="your@email.com"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="organization">Organization</Label>
+                          <Input
+                            id="organization"
+                            value={organization}
+                            onChange={(e) => setOrganization(e.target.value)}
+                            placeholder="Company or institution name"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="use-case">Your use case (optional)</Label>
+                          <Textarea
+                            id="use-case"
+                            value={useCase}
+                            onChange={(e) => setUseCase(e.target.value)}
+                            placeholder="Describe how you'd use our platform and what metrics matter most to you"
+                            className="min-h-[80px]"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-start p-3 rounded-md bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-200 text-xs">
+                            <Beaker className="h-4 w-4 mt-0.5 mr-2 flex-shrink-0" />
+                            <div>
+                              <p className="font-medium mb-1">Benchmarking Timeline:</p>
+                              <ul className="list-disc list-inside space-y-1 ml-1">
+                                <li>Beta participants: Ongoing now</li>
+                                <li>Pre-production validation: Q3 2023</li>
+                                <li>Production benchmarking: Q4 2023</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        {submitted ? (
+                          <div className="flex items-center text-green-600 dark:text-green-400">
+                            <CheckCircle2 className="h-4 w-4 mr-2" />
+                            <span>Application submitted!</span>
+                          </div>
+                        ) : (
+                          <Button type="submit">Submit application</Button>
+                        )}
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </div>
