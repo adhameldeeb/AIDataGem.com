@@ -19,13 +19,21 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
     >
       {messages.length === 0 ? (
         <div className="flex h-full items-center justify-center">
-          <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
+          <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center p-4">
             <h1 className="text-2xl font-semibold mb-2">
-              Personal Knowledge Assistant
+              Vector Knowledge Assistant
             </h1>
             <p className="mb-4 text-muted-foreground">
-              Ask a question to get started
+              I can answer questions about vector databases, embedding management, 
+              and knowledge retrieval systems. Try asking about:
             </p>
+            <ul className="text-left list-disc pl-5 mb-4 text-muted-foreground">
+              <li>Two-way vector access</li>
+              <li>Cross-platform embedding strategy</li>
+              <li>Vector database architecture</li>
+              <li>Query processing pipeline</li>
+              <li>Knowledge synthesis mechanisms</li>
+            </ul>
           </div>
         </div>
       ) : (

@@ -1,6 +1,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Message } from "./types";
+import { vectorDb } from "./vectorDb";
 
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -21,18 +22,46 @@ export function useChat() {
     if (!content.trim()) return;
     
     // Add user message
-    addMessage({ role: "user", content });
+    const userMessage = addMessage({ 
+      role: "user", 
+      content,
+      embedding: vectorDb.generateEmbedding(content)
+    });
     
     // Set loading state
     setIsLoading(true);
     
     try {
-      // Simulate API call with timeout
+      // Generate embedding for the query
+      const queryEmbedding = vectorDb.generateEmbedding(content);
+      
+      // Search for relevant knowledge
+      const searchResults = vectorDb.search(queryEmbedding, 3);
+      
+      // Generate response based on vector search results
+      let response: string;
+      
+      if (searchResults.length > 0) {
+        // Use the most relevant knowledge to generate a response
+        const relevantKnowledge = searchResults
+          .map(result => `- ${result.entry.content}`)
+          .join('\n');
+        
+        response = `Based on my knowledge:\n\n${relevantKnowledge}\n\nIs there anything specific about these concepts you'd like to explore further?`;
+      } else {
+        // Fallback to simple responses if no relevant knowledge is found
+        response = generateBasicResponse(content);
+      }
+      
+      // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Add assistant response
-      const response = generateResponse(content);
-      addMessage({ role: "assistant", content: response });
+      addMessage({ 
+        role: "assistant", 
+        content: response,
+        embedding: vectorDb.generateEmbedding(response)
+      });
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -40,20 +69,20 @@ export function useChat() {
     }
   };
   
-  // Simple response generator for demo
-  const generateResponse = (userMessage: string): string => {
+  // Simple response generator for fallback
+  const generateBasicResponse = (userMessage: string): string => {
     const lowerCaseMessage = userMessage.toLowerCase();
     
     if (lowerCaseMessage.includes("hello") || lowerCaseMessage.includes("hi")) {
-      return "Hello! How can I assist you today?";
+      return "Hello! I'm your Knowledge Assistant. You can ask me about vector databases, embedding management, or knowledge retrieval systems.";
+    } else if (lowerCaseMessage.includes("vector")) {
+      return "Vector databases store and retrieve data based on semantic similarity rather than exact matching. They're essential for modern AI systems that work with embeddings.";
+    } else if (lowerCaseMessage.includes("embedding")) {
+      return "Embeddings are numerical representations of data (like text or images) that capture semantic meaning in a way that machines can understand and compare.";
     } else if (lowerCaseMessage.includes("help")) {
-      return "I'm here to help! You can ask me questions, and I'll do my best to provide useful information.";
-    } else if (lowerCaseMessage.includes("thank")) {
-      return "You're welcome! Feel free to ask if you need anything else.";
-    } else if (lowerCaseMessage.includes("how are you")) {
-      return "I'm functioning well, thank you for asking. How can I help you today?";
+      return "I can provide information about vector databases, two-way access systems, embedding management, and other related topics. What specifically would you like to learn about?";
     } else {
-      return "I understand you're asking about \"" + userMessage + "\". While I'm just a simple demo right now, the full version would provide a helpful and detailed response to your query.";
+      return "I understand you're asking about \"" + userMessage + "\". While I have knowledge about vector databases and embedding systems, I don't have specific information about this query. Could you ask about vector databases, embeddings, or knowledge retrieval?";
     }
   };
   
