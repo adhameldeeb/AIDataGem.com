@@ -72,4 +72,30 @@ export class SecretStorageService extends BaseStorageService {
       return [];
     }
   }
+
+  // Adding these methods to match the API used in the supabaseStorageService object
+  async saveSecrets(secrets: { id: string, value: string }[]): Promise<void> {
+    try {
+      for (const secret of secrets) {
+        await this.saveSecret(secret.id, secret.value);
+      }
+    } catch (error) {
+      console.error('Error saving secrets to Supabase:', error);
+    }
+  }
+
+  async loadSecrets(): Promise<{ id: string, value: string }[]> {
+    try {
+      const { data, error } = await supabase
+        .from(this.tableName)
+        .select('id, value');
+      
+      if (error) throw error;
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error loading secrets from Supabase:', error);
+      return [];
+    }
+  }
 }

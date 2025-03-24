@@ -52,6 +52,12 @@ export const supabaseStorageService = {
   saveSecrets: async (secrets: any[]) => secretService.saveSecrets(secrets),
   loadSecrets: async () => secretService.loadSecrets(),
   
+  // Individual secret functions (to match SecretsManager.tsx usage)
+  saveSecret: async (key: string, value: string) => secretService.saveSecret(key, value),
+  getSecret: async (key: string) => secretService.getSecret(key),
+  deleteSecret: async (key: string) => secretService.deleteSecret(key),
+  listSecrets: async () => secretService.listSecrets(),
+  
   // Process functions
   saveProcesses: async (processes: any[]) => processService.saveProcesses(processes),
   loadProcesses: async () => processService.loadProcesses(),
