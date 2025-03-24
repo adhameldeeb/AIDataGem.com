@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { supabase, ensureTablesExist, createDatabaseSchema, isSupabaseAvailable } from "@/lib/supabase";
-import { supabaseStorageService } from "@/lib/supabaseStorageService";
+import { supabaseStorageService } from "@/lib/supabaseStorage";
 import { storageService } from "@/lib/storageService";
 import { toast } from "sonner";
 import { Database, Server, ArrowRight, CheckCircle2, RefreshCw, AlertTriangle, Info } from "lucide-react";
@@ -32,7 +31,6 @@ export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
       setStage("checking");
       setProgress(20);
       
-      // Check if Supabase is available and configured
       const available = await isSupabaseAvailable();
       
       if (!available) {
@@ -41,7 +39,6 @@ export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
         return;
       }
       
-      // Get database information
       const { data: projectRef } = await supabase.from('_metadata').select('name').single();
       
       setDbInfo(prev => ({
@@ -51,7 +48,6 @@ export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
       
       setProgress(40);
       
-      // Check if tables exist
       const tablesExist = await ensureTablesExist();
       
       if (tablesExist) {
@@ -72,11 +68,9 @@ export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
 
   const createTables = async () => {
     try {
-      // Create the database schema
       await createDatabaseSchema();
       setProgress(70);
       
-      // After tables are created, start migrating data
       setStage("migrating");
       await migrateData();
       
@@ -96,41 +90,31 @@ export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
 
   const migrateData = async () => {
     try {
-      // Get data from localStorage
       const messages = storageService.loadMessages();
       const files = storageService.loadFiles();
       
-      // Only attempt to migrate data that exists in localStorage
-      // Add fallbacks for methods that might not exist
-      let projects = [];
-      let models = [];
-      let embeddingModels = [];
-      let visualizationData = [];
+      let projects: any[] = [];
+      let models: any[] = [];
+      let embeddingModels: any[] = [];
+      let visualizationData: any[] = [];
       let stats = storageService.loadStats();
       
-      try {
-        // These are the methods that were causing the error
-        // Use optional chaining to prevent errors if methods don't exist
-        if (typeof storageService.loadProjects === 'function') {
-          projects = storageService.loadProjects();
-        }
-        
-        if (typeof storageService.loadLLMModels === 'function') {
-          models = storageService.loadLLMModels();
-        }
-        
-        if (typeof storageService.loadEmbeddingModels === 'function') {
-          embeddingModels = storageService.loadEmbeddingModels();
-        }
-        
-        if (typeof storageService.loadVisualizationData === 'function') {
-          visualizationData = storageService.loadVisualizationData();
-        }
-      } catch (e) {
-        console.warn("Some storage methods are not available:", e);
+      if ('loadProjects' in storageService && typeof storageService.loadProjects === 'function') {
+        projects = storageService.loadProjects();
       }
       
-      // Save data to Supabase
+      if ('loadLLMModels' in storageService && typeof storageService.loadLLMModels === 'function') {
+        models = storageService.loadLLMModels();
+      }
+      
+      if ('loadEmbeddingModels' in storageService && typeof storageService.loadEmbeddingModels === 'function') {
+        embeddingModels = storageService.loadEmbeddingModels();
+      }
+      
+      if ('loadVisualizationData' in storageService && typeof storageService.loadVisualizationData === 'function') {
+        visualizationData = storageService.loadVisualizationData();
+      }
+      
       if (messages.length > 0) {
         await supabaseStorageService.saveMessages(messages);
       }
