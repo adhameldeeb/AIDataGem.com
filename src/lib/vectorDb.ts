@@ -5,10 +5,12 @@ import { VectorEntry, SearchResult, EmbeddingModel, STORAGE_KEYS } from "./types
 class VectorDatabase {
   private entries: VectorEntry[] = [];
   private currentModel: EmbeddingModel | null = null;
+  private supportedModels: EmbeddingModel[] = [];
 
   constructor() {
     // Try to load the current embedding model from local storage
     this.loadEmbeddingModel();
+    this.initializeSupportedModels();
   }
 
   private loadEmbeddingModel() {
@@ -42,14 +44,81 @@ class VectorDatabase {
     }
   }
 
+  private initializeSupportedModels() {
+    this.supportedModels = [
+      {
+        id: "openai-text-embedding-3-small",
+        name: "OpenAI Text Embedding 3 Small",
+        provider: "openai",
+        dimensions: 1536,
+        status: "active",
+        isDefault: true
+      },
+      {
+        id: "cohere-embed-english-v3.0",
+        name: "Cohere Embed English v3.0",
+        provider: "cohere",
+        dimensions: 1024,
+        status: "inactive",
+        isDefault: false
+      },
+      {
+        id: "mixedbread-embed-xsmall",
+        name: "Mixedbread Embed XSmall v1",
+        provider: "mixedbread-ai",
+        dimensions: 384,
+        status: "inactive",
+        isDefault: false
+      },
+      {
+        id: "jina-v2-small",
+        name: "Jina V2 Small",
+        provider: "jina-ai",
+        dimensions: 512,
+        status: "inactive",
+        isDefault: false
+      },
+      {
+        id: "bge-large-en-v1.5",
+        name: "BGE Large English v1.5",
+        provider: "BAAI",
+        dimensions: 1024,
+        status: "inactive",
+        isDefault: false
+      }
+    ];
+  }
+
   // Add an entry to the database
   public addEntry(entry: VectorEntry): void {
     this.entries.push(entry);
   }
 
+  // Get the current embedding model
+  public getCurrentModel(): EmbeddingModel | null {
+    return this.currentModel;
+  }
+
   // Get the current embedding model name
   public getCurrentModelName(): string {
     return this.currentModel?.name || "Default Model";
+  }
+
+  // Get supported embedding models
+  public getSupportedModels(): EmbeddingModel[] {
+    return this.supportedModels;
+  }
+
+  // Set current embedding model
+  public setCurrentModel(modelId: string): boolean {
+    const model = this.supportedModels.find(m => m.id === modelId);
+    if (model) {
+      this.currentModel = model;
+      localStorage.setItem(STORAGE_KEYS.EMBEDDING_MODEL, JSON.stringify(model));
+      console.log(`Set current embedding model to: ${model.name}`);
+      return true;
+    }
+    return false;
   }
 
   // Generate embeddings using the configured model

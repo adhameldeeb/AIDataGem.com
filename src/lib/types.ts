@@ -33,6 +33,9 @@ export interface Message {
     conversationId?: string;
     threadId?: string;
     sourceFile?: string;
+    subject?: string;     // New: For subject matter categorization
+    sessionId?: string;   // New: To track separate chat sessions
+    processId?: string;   // New: For tracking processing operations
   };
 }
 
@@ -102,6 +105,8 @@ export interface MessageTableFilters {
   priority?: string[];
   status?: string[];
   category?: string[];
+  subject?: string[];     // New: For subject filtering
+  session?: string[];     // New: For session filtering
 }
 
 // Local storage keys
@@ -112,7 +117,8 @@ export const STORAGE_KEYS = {
   STATS: 'vector-knowledge-stats',
   MODELS: 'vector-knowledge-models',
   PROJECTS: 'vector-knowledge-projects',
-  EMBEDDING_MODEL: 'vector-knowledge-embedding-model'
+  EMBEDDING_MODEL: 'vector-knowledge-embedding-model',
+  PROCESSES: 'vector-knowledge-processes' // New: For tracking processing operations
 };
 
 // LLM and embedding model types
@@ -129,6 +135,8 @@ export interface LLMModel {
   maxTokens?: number;
   costPer1kTokens?: number;
   metadata?: Record<string, any>;
+  isSecured?: boolean;    // New: Flag for secured API credentials
+  lastUsed?: Date;        // New: Track when model was last used
 }
 
 export interface EmbeddingModel {
@@ -141,6 +149,8 @@ export interface EmbeddingModel {
   status: 'active' | 'inactive';
   isDefault: boolean;
   metadata?: Record<string, any>;
+  isSecured?: boolean;    // New: Flag for secured API credentials
+  lastUsed?: Date;        // New: Track when model was last used
 }
 
 // Project management types
@@ -154,6 +164,10 @@ export interface Project {
   messageCount: number;
   status: 'active' | 'archived';
   metadata?: Record<string, any>;
+  subjects?: string[];    // New: List of subjects in this project
+  tags?: string[];        // New: Project tags for organization
+  owner?: string;         // New: Project owner
+  priority?: string;      // New: Project priority
 }
 
 // Database status types
@@ -165,4 +179,18 @@ export interface DatabaseStatus {
     embeddings: number;
     storageSize: number;
   };
+}
+
+// New: Process tracking types
+export interface Process {
+  id: string;
+  name: string;
+  type: 'import' | 'export' | 'embedding' | 'analysis' | 'custom';
+  status: 'pending' | 'running' | 'completed' | 'error';
+  progress: number;
+  startTime: Date;
+  endTime?: Date;
+  error?: string;
+  metadata?: Record<string, any>;
+  result?: any;
 }
