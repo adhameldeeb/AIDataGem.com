@@ -3,18 +3,18 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { supabase, ensureTablesExist, createDatabaseSchema } from "@/lib/supabase";
+import { supabase, ensureTablesExist, createDatabaseSchema, isSupabaseAvailable } from "@/lib/supabase";
 import { supabaseStorageService } from "@/lib/supabaseStorageService";
 import { storageService } from "@/lib/storageService";
 import { toast } from "sonner";
-import { Database, Server, ArrowRight, CheckCircle2, RefreshCw, AlertTriangle } from "lucide-react";
+import { Database, Server, ArrowRight, CheckCircle2, RefreshCw, AlertTriangle, Info } from "lucide-react";
 
 interface DatabaseSetupProps {
   onComplete?: () => void;
 }
 
 export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
-  const [stage, setStage] = useState<"checking" | "creating" | "migrating" | "complete" | "error">("checking");
+  const [stage, setStage] = useState<"checking" | "creating" | "migrating" | "complete" | "error" | "not-configured">("checking");
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [dbInfo, setDbInfo] = useState<{
@@ -31,6 +31,15 @@ export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
     try {
       setStage("checking");
       setProgress(20);
+      
+      // Check if Supabase is available and configured
+      const available = await isSupabaseAvailable();
+      
+      if (!available) {
+        setStage("not-configured");
+        setError("Supabase environment variables are missing or connection failed");
+        return;
+      }
       
       // Get database information
       const { data: projectRef } = await supabase.from('_metadata').select('name').single();
@@ -90,11 +99,36 @@ export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
       // Get data from localStorage
       const messages = storageService.loadMessages();
       const files = storageService.loadFiles();
-      const projects = storageService.loadProjects();
-      const models = storageService.loadLLMModels();
-      const embeddingModels = storageService.loadEmbeddingModels();
-      const visualizationData = storageService.loadVisualizationData();
-      const stats = storageService.loadStats();
+      
+      // Only attempt to migrate data that exists in localStorage
+      // Add fallbacks for methods that might not exist
+      let projects = [];
+      let models = [];
+      let embeddingModels = [];
+      let visualizationData = [];
+      let stats = storageService.loadStats();
+      
+      try {
+        // These are the methods that were causing the error
+        // Use optional chaining to prevent errors if methods don't exist
+        if (typeof storageService.loadProjects === 'function') {
+          projects = storageService.loadProjects();
+        }
+        
+        if (typeof storageService.loadLLMModels === 'function') {
+          models = storageService.loadLLMModels();
+        }
+        
+        if (typeof storageService.loadEmbeddingModels === 'function') {
+          embeddingModels = storageService.loadEmbeddingModels();
+        }
+        
+        if (typeof storageService.loadVisualizationData === 'function') {
+          visualizationData = storageService.loadVisualizationData();
+        }
+      } catch (e) {
+        console.warn("Some storage methods are not available:", e);
+      }
       
       // Save data to Supabase
       if (messages.length > 0) {
@@ -144,10 +178,64 @@ export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
         return "Database setup complete!";
       case "error":
         return "Error setting up database";
+      case "not-configured":
+        return "Supabase not configured";
       default:
         return "";
     }
   };
+
+  if (stage === "not-configured") {
+    return (
+      <Card className="bg-slate-800/80 border-slate-700">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5 text-amber-400" />
+            Supabase Configuration Required
+          </CardTitle>
+          <CardDescription>
+            Configure your Supabase project for AIDatagem
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-amber-900/20 border border-amber-800/30 rounded-md p-4 flex items-start gap-3">
+            <Info className="h-5 w-5 text-amber-400 flex-shrink-0 mt-1" />
+            <div className="space-y-2">
+              <p className="text-sm">
+                Supabase environment variables are missing. To use database features, you need to:
+              </p>
+              <ol className="text-sm space-y-1 list-decimal pl-4">
+                <li>Create a Supabase project at <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">supabase.com</a></li>
+                <li>Set the following environment variables in your project:
+                  <ul className="list-disc pl-4 mt-1 space-y-1">
+                    <li><code className="bg-slate-900 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> - Your Supabase project URL</li>
+                    <li><code className="bg-slate-900 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code> - Your Supabase anon/public key</li>
+                  </ul>
+                </li>
+                <li>Restart your application after setting the environment variables</li>
+              </ol>
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button 
+            variant="outline" 
+            onClick={checkDatabase}
+            className="mr-auto"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Check Connection Again
+          </Button>
+          {onComplete && (
+            <Button onClick={onComplete} variant="secondary">
+              Continue Without Database
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-slate-800/80 border-slate-700">
