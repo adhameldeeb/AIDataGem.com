@@ -8,69 +8,73 @@ import { ProjectStorageService } from './ProjectStorageService';
 import { SecretStorageService } from './SecretStorageService';
 import { ProcessStorageService } from './ProcessStorageService';
 import { supabase } from '../supabase';
+import { TABLES } from '../supabase';
 
-class SupabaseStorageService {
-  private messageService = new MessageStorageService();
-  private fileService = new FileStorageService();
-  private statsService = new StatsStorageService();
-  private visualizationService = new VisualizationStorageService();
-  private modelsService = new ModelsStorageService();
-  private projectService = new ProjectStorageService();
-  private secretService = new SecretStorageService();
-  private processService = new ProcessStorageService();
+// Create instances of each service
+const messageService = new MessageStorageService();
+const fileService = new FileStorageService();
+const statsService = new StatsStorageService();
+const visualizationService = new VisualizationStorageService();
+const modelsService = new ModelsStorageService();
+const projectService = new ProjectStorageService();
+const secretService = new SecretStorageService();
+const processService = new ProcessStorageService();
 
-  // Messages
-  saveMessages = this.messageService.saveMessages.bind(this.messageService);
-  loadMessages = this.messageService.loadMessages.bind(this.messageService);
-
-  // Files
-  saveFiles = this.fileService.saveFiles.bind(this.fileService);
-  loadFiles = this.fileService.loadFiles.bind(this.fileService);
-
-  // Stats
-  saveStats = this.statsService.saveStats.bind(this.statsService);
-  loadStats = this.statsService.loadStats.bind(this.statsService);
-
-  // Visualization
-  saveVisualizationData = this.visualizationService.saveVisualizationData.bind(this.visualizationService);
-  loadVisualizationData = this.visualizationService.loadVisualizationData.bind(this.visualizationService);
-
-  // Models
-  saveLLMModels = this.modelsService.saveLLMModels.bind(this.modelsService);
-  loadLLMModels = this.modelsService.loadLLMModels.bind(this.modelsService);
-  saveEmbeddingModels = this.modelsService.saveEmbeddingModels.bind(this.modelsService);
-  loadEmbeddingModels = this.modelsService.loadEmbeddingModels.bind(this.modelsService);
-
-  // Projects
-  saveProjects = this.projectService.saveProjects.bind(this.projectService);
-  loadProjects = this.projectService.loadProjects.bind(this.projectService);
-
-  // Secrets
-  saveSecret = this.secretService.saveSecret.bind(this.secretService);
-  getSecret = this.secretService.getSecret.bind(this.secretService);
-  deleteSecret = this.secretService.deleteSecret.bind(this.secretService);
-  listSecrets = this.secretService.listSecrets.bind(this.secretService);
-
-  // Processes
-  saveProcess = this.processService.saveProcess.bind(this.processService);
-  loadProcesses = this.processService.loadProcesses.bind(this.processService);
-
+// Combined service that exposes all functionality
+export const supabaseStorageService = {
+  // Message functions
+  saveMessages: async (messages: any[]) => messageService.saveMessages(messages),
+  loadMessages: async () => messageService.loadMessages(),
+  
+  // File functions
+  saveFiles: async (files: any[]) => fileService.saveFiles(files),
+  loadFiles: async () => fileService.loadFiles(),
+  
+  // Stats functions
+  saveStats: async (stats: any) => statsService.saveStats(stats),
+  loadStats: async () => statsService.loadStats(),
+  
+  // Visualization functions
+  saveVisualizationData: async (data: any[]) => visualizationService.saveVisualizationData(data),
+  loadVisualizationData: async () => visualizationService.loadVisualizationData(),
+  
+  // Models functions
+  saveLLMModels: async (models: any[]) => modelsService.saveLLMModels(models),
+  loadLLMModels: async () => modelsService.loadLLMModels(),
+  saveEmbeddingModels: async (models: any[]) => modelsService.saveEmbeddingModels(models),
+  loadEmbeddingModels: async () => modelsService.loadEmbeddingModels(),
+  
+  // Project functions
+  saveProjects: async (projects: any[]) => projectService.saveProjects(projects),
+  loadProjects: async () => projectService.loadProjects(),
+  
+  // Secret functions
+  saveSecrets: async (secrets: any[]) => secretService.saveSecrets(secrets),
+  loadSecrets: async () => secretService.loadSecrets(),
+  
+  // Process functions
+  saveProcesses: async (processes: any[]) => processService.saveProcesses(processes),
+  loadProcesses: async () => processService.loadProcesses(),
+  
   // Clear all data
-  async clearAll(): Promise<void> {
+  clearAll: async () => {
     try {
       // Clear each table
       for (const table of Object.values(TABLES)) {
         const { error } = await supabase
           .from(table)
           .delete()
-          .neq('id', 'dummy_to_match_nothing'); // Delete all rows
-        
-        if (error) throw error;
+          .neq('id', 'placeholder'); // Delete all rows
+          
+        if (error) {
+          console.error(`Error clearing table ${table}:`, error);
+        }
       }
+      
+      return true;
     } catch (error) {
-      console.error('Error clearing all data from Supabase:', error);
+      console.error('Error clearing all data:', error);
+      return false;
     }
   }
-}
-
-export const supabaseStorageService = new SupabaseStorageService();
+};

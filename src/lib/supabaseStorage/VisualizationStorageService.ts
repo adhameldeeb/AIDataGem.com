@@ -1,35 +1,31 @@
 
 import { BaseStorageService } from './BaseStorageService';
 import { TABLES } from '../supabase';
+import { EmbeddingVisualizationData } from '../types';
+import { supabase } from '../supabase';
 
 export class VisualizationStorageService extends BaseStorageService {
   constructor() {
     super(TABLES.VISUALIZATIONS);
   }
-
-  async saveVisualizationData(data: any[]): Promise<void> {
+  
+  async saveVisualizationData(data: EmbeddingVisualizationData[]): Promise<void> {
     try {
-      // For visualization data, we'll store each point separately
-      const formattedData = data.map(point => ({
-        id: point.id || crypto.randomUUID(),
-        data: point
-      }));
-      
-      await this.upsertData(formattedData);
+      await this.upsertData(data);
     } catch (error) {
       console.error('Error saving visualization data to Supabase:', error);
     }
   }
-
-  async loadVisualizationData(): Promise<any[]> {
+  
+  async loadVisualizationData(): Promise<EmbeddingVisualizationData[]> {
     try {
       const { data, error } = await supabase
-        .from(this.tableName)
-        .select('data');
-      
+        .from(TABLES.VISUALIZATIONS)
+        .select('*');
+        
       if (error) throw error;
       
-      return (data || []).map(item => item.data);
+      return data || [];
     } catch (error) {
       console.error('Error loading visualization data from Supabase:', error);
       return [];
