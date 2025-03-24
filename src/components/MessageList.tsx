@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from "react";
 import { ChatMessage, LoadingMessage } from "@/components/ChatMessage";
 import { Message } from "@/lib/types";
+import { ProjectManager } from "./ProjectManager";
 
 interface MessageListProps {
   messages: Message[];
@@ -17,7 +18,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
   }, [messages, isLoading]);
 
   return (
-    <div className="flex-1 overflow-y-auto py-4 bg-gradient-to-b from-background to-background/80">
+    <div className="flex-1 overflow-y-auto py-4 bg-slate-900">
       {messages.length === 0 ? (
         <div className="h-full flex flex-col items-center justify-center p-8 text-center">
           <div className="max-w-md space-y-4">

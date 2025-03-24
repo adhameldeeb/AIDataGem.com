@@ -1,25 +1,70 @@
 
-import { VectorEntry, SearchResult } from "./types";
+import { VectorEntry, SearchResult, EmbeddingModel, STORAGE_KEYS } from "./types";
 
-// A simple in-memory vector database for demo purposes
+// A vector database implementation with configurable embedding models
 class VectorDatabase {
   private entries: VectorEntry[] = [];
+  private currentModel: EmbeddingModel | null = null;
+
+  constructor() {
+    // Try to load the current embedding model from local storage
+    this.loadEmbeddingModel();
+  }
+
+  private loadEmbeddingModel() {
+    try {
+      const storedModel = localStorage.getItem(STORAGE_KEYS.EMBEDDING_MODEL);
+      if (storedModel) {
+        this.currentModel = JSON.parse(storedModel);
+        console.log(`Loaded embedding model: ${this.currentModel.name}`);
+      } else {
+        // Default model if none is configured
+        this.currentModel = {
+          id: "openai-text-embedding-3-small",
+          name: "OpenAI Text Embedding 3 Small",
+          provider: "openai",
+          dimensions: 1536,
+          status: "active",
+          isDefault: true
+        };
+      }
+    } catch (error) {
+      console.error("Error loading embedding model:", error);
+      // Default model as fallback
+      this.currentModel = {
+        id: "openai-text-embedding-3-small",
+        name: "OpenAI Text Embedding 3 Small",
+        provider: "openai",
+        dimensions: 1536,
+        status: "active",
+        isDefault: true
+      };
+    }
+  }
 
   // Add an entry to the database
   public addEntry(entry: VectorEntry): void {
     this.entries.push(entry);
   }
 
-  // Generate a simple embedding for demo purposes
-  // In a real implementation, this would call an embedding API
+  // Get the current embedding model name
+  public getCurrentModelName(): string {
+    return this.currentModel?.name || "Default Model";
+  }
+
+  // Generate embeddings using the configured model
+  // In a real implementation, this would call an API
   public generateEmbedding(text: string): number[] {
-    // This is a very naive "embedding" for demonstration only
-    // Real embeddings would use models like OpenAI's text-embedding-ada-002
+    console.log(`Generating embedding with model: ${this.currentModel?.name}`);
+    
+    // This is a simplified embedding generation for demo purposes
+    // In reality, we would call the appropriate API based on the model
+    const dimensions = this.currentModel?.dimensions || 1536;
     const hash = Array.from(text)
       .reduce((acc, char) => char.charCodeAt(0) + acc, 0);
     
-    // Generate a 10-dimensional vector based on the text hash
-    return Array(10).fill(0).map((_, i) => 
+    // Generate a vector with the specified dimensions
+    return Array(dimensions).fill(0).map((_, i) => 
       Math.sin(hash * (i + 1) * 0.1) * 0.5 + 0.5
     );
   }
@@ -44,21 +89,20 @@ class VectorDatabase {
 
   // Calculate cosine similarity between two vectors
   private cosineSimilarity(vecA: number[], vecB: number[]): number {
-    if (vecA.length !== vecB.length) {
-      throw new Error("Vectors must have the same dimensions");
-    }
-
+    // If dimensions don't match, use only the dimensions that are present in both
+    const minDimensions = Math.min(vecA.length, vecB.length);
+    
     let dotProduct = 0;
     let normA = 0;
     let normB = 0;
 
-    for (let i = 0; i < vecA.length; i++) {
+    for (let i = 0; i < minDimensions; i++) {
       dotProduct += vecA[i] * vecB[i];
       normA += vecA[i] * vecA[i];
       normB += vecB[i] * vecB[i];
     }
 
-    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB)) || 0;
   }
 
   // Initialize with some knowledge entries

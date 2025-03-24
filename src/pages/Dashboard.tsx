@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from "react";
 import { FileUploader } from "@/components/FileUploader";
 import { FileList } from "@/components/FileList";
@@ -6,12 +7,16 @@ import { MessageTable } from "@/components/MessageTable";
 import { ThreadedMessageView } from "@/components/ThreadedMessageView";
 import { UploadProgress } from "@/components/UploadProgress";
 import { Chat } from "@/components/Chat";
+import { LLMModelsConfig } from "@/components/LLMModelsConfig";
+import { ProjectManager } from "@/components/ProjectManager";
+import { SystemStatus } from "@/components/SystemStatus";
 import { UploadedFile, UploadStats, Message } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { processChatHistory } from "@/lib/fileProcessor";
 import { storageService } from "@/lib/storageService";
+import { vectorDb } from "@/lib/vectorDb";
 import { Button } from "@/components/ui/button";
 import { 
   Trash2, 
@@ -22,6 +27,8 @@ import {
   BarChart2, 
   Activity,
   ListTree,
+  Settings,
+  Database,
   MessageCircle
 } from "lucide-react";
 import { 
@@ -45,6 +52,7 @@ const Dashboard = () => {
   });
   const [visualizationData, setVisualizationData] = useState<any[]>([]);
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("upload");
 
   useEffect(() => {
     const loadFromStorage = () => {
@@ -204,11 +212,71 @@ const Dashboard = () => {
   }, [toast]);
 
   const handleImportData = useCallback(() => {
-    // Implement import functionality here
-    toast({
-      title: "Import not implemented",
-      description: "This is just a demo of the import functionality",
-    });
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const result = event.target?.result as string;
+          const importedData = JSON.parse(result);
+          
+          // Convert string dates back to Date objects for files
+          if (importedData.files && Array.isArray(importedData.files)) {
+            const files = importedData.files.map((file: any) => ({
+              ...file,
+              timestamp: new Date(file.timestamp)
+            }));
+            setFiles(files);
+          }
+          
+          // Convert string dates back to Date objects for messages
+          if (importedData.messages && Array.isArray(importedData.messages)) {
+            const messages = importedData.messages.map((message: any) => ({
+              ...message,
+              timestamp: new Date(message.timestamp),
+              metadata: message.metadata ? {
+                ...message.metadata,
+                lastModified: message.metadata.lastModified ? 
+                  new Date(message.metadata.lastModified) : undefined
+              } : undefined
+            }));
+            setMessages(messages);
+          }
+          
+          // Set visualization data
+          if (importedData.visualizationData && Array.isArray(importedData.visualizationData)) {
+            setVisualizationData(importedData.visualizationData);
+          }
+          
+          // Set stats
+          if (importedData.stats && typeof importedData.stats === 'object') {
+            setStats(importedData.stats);
+          }
+          
+          toast({
+            title: "Data imported successfully",
+            description: `Imported ${importedData.files?.length || 0} files and ${importedData.messages?.length || 0} messages`,
+          });
+        } catch (error) {
+          console.error("Error importing data:", error);
+          toast({
+            title: "Error importing data",
+            description: error instanceof Error ? error.message : "Invalid file format",
+            variant: "destructive",
+          });
+        }
+      };
+      
+      reader.readAsText(file);
+    };
+    
+    input.click();
   }, [toast]);
 
   const handleExportData = useCallback(() => {
@@ -225,7 +293,7 @@ const Dashboard = () => {
       
       const a = document.createElement('a');
       a.href = url;
-      a.download = `vector-knowledge-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `aidatagem-export-${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(a);
       a.click();
       
@@ -249,9 +317,9 @@ const Dashboard = () => {
   }, [files, messages, visualizationData, stats, toast]);
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="container mx-auto p-4 space-y-6 bg-[#1e2130] min-h-screen text-white">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Vector Knowledge Dashboard</h1>
+        <h1 className="text-2xl font-bold">AIDatagem Dashboard</h1>
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -305,38 +373,77 @@ const Dashboard = () => {
         </div>
       </div>
       
-      <Tabs defaultValue="upload">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="upload">
+      <div className="bg-primary/10 p-4 rounded-md">
+        <h2 className="text-lg font-medium mb-2">Current Embedding Model</h2>
+        <div className="flex justify-between items-center">
+          <p>
+            <span className="text-muted-foreground">Using:</span>{" "}
+            <span className="font-medium">{vectorDb.getCurrentModelName()}</span>
+          </p>
+          <Button 
+            variant="secondary" 
+            size="sm"
+            onClick={() => setActiveTab("models")}
+          >
+            Configure Models
+          </Button>
+        </div>
+      </div>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-8 bg-slate-800 p-1">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-slate-700">
+            <Activity className="h-4 w-4 mr-2" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="upload" className="data-[state=active]:bg-slate-700">
             <FileUp className="h-4 w-4 mr-2" />
             Upload
           </TabsTrigger>
-          <TabsTrigger value="messages">
+          <TabsTrigger value="messages" className="data-[state=active]:bg-slate-700">
             <MessageSquare className="h-4 w-4 mr-2" />
             Messages
           </TabsTrigger>
-          <TabsTrigger value="threads">
+          <TabsTrigger value="threads" className="data-[state=active]:bg-slate-700">
             <ListTree className="h-4 w-4 mr-2" />
             Threads
           </TabsTrigger>
-          <TabsTrigger value="chat">
+          <TabsTrigger value="chat" className="data-[state=active]:bg-slate-700">
             <MessageCircle className="h-4 w-4 mr-2" />
             Chat
           </TabsTrigger>
-          <TabsTrigger value="visualization">
+          <TabsTrigger value="visualization" className="data-[state=active]:bg-slate-700">
             <BarChart2 className="h-4 w-4 mr-2" />
             Visualization
           </TabsTrigger>
-          <TabsTrigger value="stats">
-            <Activity className="h-4 w-4 mr-2" />
-            Statistics
+          <TabsTrigger value="models" className="data-[state=active]:bg-slate-700">
+            <Settings className="h-4 w-4 mr-2" />
+            Models
+          </TabsTrigger>
+          <TabsTrigger value="projects" className="data-[state=active]:bg-slate-700">
+            <Database className="h-4 w-4 mr-2" />
+            Projects
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="upload" className="space-y-4">
-          <Card>
+        <TabsContent value="overview" className="mt-6">
+          <Card className="bg-slate-800/80 border-slate-700">
             <CardHeader>
-              <CardTitle>Upload Chat History</CardTitle>
+              <CardTitle>System Overview</CardTitle>
+              <CardDescription>
+                Overview of AIDatagem system status and key metrics
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SystemStatus />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="upload" className="space-y-4 mt-6">
+          <Card className="bg-slate-800/80 border-slate-700">
+            <CardHeader>
+              <CardTitle>Upload Content</CardTitle>
               <CardDescription>
                 Upload JSON files containing chat history to analyze and visualize embeddings.
               </CardDescription>
@@ -348,7 +455,7 @@ const Dashboard = () => {
           
           <UploadProgress stats={stats} />
           
-          <Card>
+          <Card className="bg-slate-800/80 border-slate-700">
             <CardHeader>
               <CardTitle>Uploaded Files</CardTitle>
             </CardHeader>
@@ -362,8 +469,8 @@ const Dashboard = () => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="messages">
-          <Card>
+        <TabsContent value="messages" className="mt-6">
+          <Card className="bg-slate-800/80 border-slate-700">
             <CardHeader>
               <CardTitle>Message Data</CardTitle>
               <CardDescription>
@@ -376,24 +483,24 @@ const Dashboard = () => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="threads">
-          <Card>
+        <TabsContent value="threads" className="mt-6">
+          <Card className="bg-slate-800/80 border-slate-700">
             <CardHeader>
               <CardTitle>Threaded Message View</CardTitle>
               <CardDescription>
-                View messages in a threaded format.
+                View messages in a threaded format with conversations and topics.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0 sm:p-6">
               <ThreadedMessageView messages={messages} />
             </CardContent>
           </Card>
         </TabsContent>
         
-        <TabsContent value="chat">
-          <Card>
+        <TabsContent value="chat" className="mt-6">
+          <Card className="bg-slate-800/80 border-slate-700">
             <CardHeader>
-              <CardTitle>DataFromAI Chat</CardTitle>
+              <CardTitle>AIDatagem Chat</CardTitle>
               <CardDescription>
                 Interact with your data using natural language queries
               </CardDescription>
@@ -406,8 +513,8 @@ const Dashboard = () => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="visualization">
-          <Card>
+        <TabsContent value="visualization" className="mt-6">
+          <Card className="bg-slate-800/80 border-slate-700">
             <CardHeader>
               <CardTitle>Embedding Visualization</CardTitle>
               <CardDescription>
@@ -420,54 +527,19 @@ const Dashboard = () => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="stats">
-          <Card>
-            <CardHeader>
-              <CardTitle>Processing Statistics</CardTitle>
-              <CardDescription>
-                Overview of chat history processing metrics.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <h3 className="font-medium text-sm text-muted-foreground">Total Files</h3>
-                  <p className="text-2xl font-bold">{stats.totalFiles}</p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <h3 className="font-medium text-sm text-muted-foreground">Processed Files</h3>
-                  <p className="text-2xl font-bold">{stats.processedFiles}</p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <h3 className="font-medium text-sm text-muted-foreground">Total Messages</h3>
-                  <p className="text-2xl font-bold">{stats.totalMessages}</p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <h3 className="font-medium text-sm text-muted-foreground">Processed Messages</h3>
-                  <p className="text-2xl font-bold">{stats.processedMessages}</p>
-                </div>
-              </div>
-              
-              <div className="mt-6">
-                <h3 className="text-lg font-medium mb-3">Estimated Storage Usage</h3>
-                <div className="p-4 border rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Local Storage</span>
-                    <span className="text-sm font-medium">
-                      {Math.round((JSON.stringify(messages).length + 
-                                  JSON.stringify(files).length + 
-                                  JSON.stringify(visualizationData).length) / 1024)} KB
-                    </span>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Note: Browser local storage is limited to ~5MB. For larger datasets, consider using a database solution.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="models" className="mt-6">
+          <LLMModelsConfig />
+        </TabsContent>
+        
+        <TabsContent value="projects" className="mt-6">
+          <ProjectManager messages={messages} />
         </TabsContent>
       </Tabs>
+      
+      <div className="text-center text-xs text-slate-400 mt-8">
+        <p>AIDatagem - Transforming Data into Gems of Insight</p>
+        <p>Current embedding model: {vectorDb.getCurrentModelName()}</p>
+      </div>
     </div>
   );
 };

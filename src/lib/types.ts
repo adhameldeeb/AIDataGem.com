@@ -109,5 +109,60 @@ export const STORAGE_KEYS = {
   FILES: 'vector-knowledge-files',
   MESSAGES: 'vector-knowledge-messages',
   VISUALIZATION_DATA: 'vector-knowledge-visualization',
-  STATS: 'vector-knowledge-stats'
+  STATS: 'vector-knowledge-stats',
+  MODELS: 'vector-knowledge-models',
+  PROJECTS: 'vector-knowledge-projects',
+  EMBEDDING_MODEL: 'vector-knowledge-embedding-model'
 };
+
+// LLM and embedding model types
+export interface LLMModel {
+  id: string;
+  name: string;
+  provider: string;
+  apiKey?: string;
+  apiEndpoint?: string;
+  priority: number;
+  status: 'active' | 'inactive';
+  type: 'llm' | 'embedding';
+  contextWindow?: number;
+  maxTokens?: number;
+  costPer1kTokens?: number;
+  metadata?: Record<string, any>;
+}
+
+export interface EmbeddingModel {
+  id: string;
+  name: string;
+  provider: string;
+  dimensions: number;
+  apiKey?: string;
+  apiEndpoint?: string;
+  status: 'active' | 'inactive';
+  isDefault: boolean;
+  metadata?: Record<string, any>;
+}
+
+// Project management types
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  messageCount: number;
+  status: 'active' | 'archived';
+  metadata?: Record<string, any>;
+}
+
+// Database status types
+export interface DatabaseStatus {
+  connected: boolean;
+  totalDocuments: number;
+  totalConversations: number;
+  vectorStore: {
+    embeddings: number;
+    storageSize: number;
+  };
+}
