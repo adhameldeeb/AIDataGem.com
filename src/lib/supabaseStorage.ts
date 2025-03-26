@@ -1,3 +1,5 @@
 
-// Re-export the supabaseStorageService from the modular implementation
-export { supabaseStorageService } from './supabaseStorage/index';
+// Common supabaseStorage interface for interacting with Supabase
+import { supabaseStorageService } from './supabaseStorage/index';
+
+export { supabaseStorageService };

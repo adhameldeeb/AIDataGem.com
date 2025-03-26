@@ -1,7 +1,6 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { UploadedFile, UploadStats, Message } from "@/lib/types";
-import { supabaseStorageService } from "@/lib/supabaseStorageService";
+import { supabaseStorageService } from "@/lib/supabaseStorage";
 import { storageService } from "@/lib/storageService";
 import { processChatHistory } from "@/lib/fileProcessor";
 import { useToast } from "@/components/ui/use-toast";
@@ -23,8 +22,8 @@ export function useDataManager(dbSetupComplete: boolean) {
   useEffect(() => {
     const checkSupabaseConnection = async () => {
       try {
-        // Simplified connection check
-        const { data, error } = await supabase.rpc('get_service_status');
+        // Check connection via our edge function
+        const { data, error } = await supabase.functions.invoke('get_service_status');
         
         if (error) throw error;
         
