@@ -140,6 +140,14 @@ export default {
 				'loading-dot-1': 'loading-dot 1.5s ease-in-out infinite',
 				'loading-dot-2': 'loading-dot 1.5s 0.2s ease-in-out infinite',
 				'loading-dot-3': 'loading-dot 1.5s 0.4s ease-in-out infinite'
+			},
+			fontFamily: {
+				sans: ['Inter', 'sans-serif'],
+				display: ['Montserrat', 'sans-serif']
+			},
+			boxShadow: {
+				'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.08)',
+				'card': '0 10px 30px -5px rgba(0, 0, 0, 0.05)',
 			}
 		}
 	},

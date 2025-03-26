@@ -61,8 +61,8 @@ const Dashboard = () => {
   } = useDataManager(dbSetupComplete);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#151922] to-[#1e2130] text-white">
-      <div className="container mx-auto p-6 space-y-8">
+    <div className="min-h-screen bg-white text-foreground">
+      <div className="container mx-auto px-4 sm:px-6 py-8 space-y-6">
         <DashboardHeader 
           dbSetupComplete={dbSetupComplete}
           handleImportData={handleImportData}
@@ -73,8 +73,8 @@ const Dashboard = () => {
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-pulse flex flex-col items-center">
-              <div className="h-12 w-12 rounded-full bg-blue-500 opacity-75 mb-4"></div>
-              <p className="text-lg text-blue-300">Connecting to Supabase...</p>
+              <div className="h-12 w-12 rounded-full bg-primary opacity-75 mb-4"></div>
+              <p className="text-lg text-primary">Connecting to Supabase...</p>
             </div>
           </div>
         ) : (
@@ -84,7 +84,7 @@ const Dashboard = () => {
               setActiveTab={setActiveTab} 
             />
             
-            <div className="bg-[#1a1d2a]/50 rounded-xl p-6 backdrop-blur-sm border border-slate-700/50 shadow-xl">
+            <div className="bg-white rounded-xl p-4 sm:p-6 border border-border shadow-soft">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <DashboardTabs 
                   dbSetupComplete={dbSetupComplete} 

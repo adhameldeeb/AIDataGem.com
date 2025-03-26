@@ -1,3 +1,4 @@
+
 import React from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -44,18 +45,17 @@ export function DashboardContent({
   if (!dbSetupComplete) {
     return (
       <TabsContent value="database" className="mt-6 space-y-6 animate-fade-in">
-        <Card className="bg-slate-800/50 border-slate-700 overflow-hidden shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-purple-900/10 z-0"></div>
-          <CardHeader className="relative z-10">
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <Database className="h-6 w-6 text-blue-400" />
+        <Card className="bg-white border-border overflow-hidden shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl text-foreground">
+              <Database className="h-6 w-6 text-primary" />
               Database Setup
             </CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription>
               Initialize your Supabase database to start storing and analyzing data
             </CardDescription>
           </CardHeader>
-          <CardContent className="relative z-10">
+          <CardContent>
             <DatabaseSetup onComplete={handleDbSetupComplete} />
           </CardContent>
         </Card>
@@ -66,51 +66,48 @@ export function DashboardContent({
   return (
     <>
       <TabsContent value="overview" className="mt-6 space-y-6 animate-fade-in">
-        <Card className="bg-slate-800/50 border-slate-700 overflow-hidden shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-purple-900/10 z-0"></div>
-          <CardHeader className="relative z-10">
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <Activity className="h-6 w-6 text-blue-400" />
+        <Card className="bg-white border-border overflow-hidden shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl text-foreground">
+              <Activity className="h-6 w-6 text-primary" />
               System Overview
             </CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription>
               Overview of AIDatagem system status and key metrics
             </CardDescription>
           </CardHeader>
-          <CardContent className="relative z-10">
+          <CardContent>
             <SystemStatus />
           </CardContent>
         </Card>
       </TabsContent>
       
       <TabsContent value="upload" className="space-y-6 mt-6 animate-fade-in">
-        <Card className="bg-slate-800/50 border-slate-700 overflow-hidden shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-purple-900/10 z-0"></div>
-          <CardHeader className="relative z-10">
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <FileUp className="h-6 w-6 text-blue-400" />
+        <Card className="bg-white border-border overflow-hidden shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl text-foreground">
+              <FileUp className="h-6 w-6 text-primary" />
               Upload Content
             </CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription>
               Upload JSON files containing chat history to analyze and visualize embeddings
             </CardDescription>
           </CardHeader>
-          <CardContent className="relative z-10">
+          <CardContent>
             <FileUploader onFilesAdded={onFilesAdded} />
           </CardContent>
         </Card>
         
         <UploadProgress stats={stats} />
         
-        <Card className="bg-slate-800/50 border-slate-700 overflow-hidden shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-purple-900/5 z-0"></div>
-          <CardHeader className="relative z-10">
-            <CardTitle className="flex items-center gap-2">
-              <FileUp className="h-5 w-5 text-blue-400" />
+        <Card className="bg-white border-border overflow-hidden shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <FileUp className="h-5 w-5 text-primary" />
               Uploaded Files
             </CardTitle>
           </CardHeader>
-          <CardContent className="relative z-10">
+          <CardContent>
             <FileList 
               files={files} 
               onClearCompleted={handleClearCompleted} 
@@ -121,54 +118,51 @@ export function DashboardContent({
       </TabsContent>
       
       <TabsContent value="messages" className="mt-6 animate-fade-in">
-        <Card className="bg-slate-800/50 border-slate-700 overflow-hidden shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-purple-900/10 z-0"></div>
-          <CardHeader className="relative z-10">
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <MessageSquare className="h-6 w-6 text-blue-400" />
+        <Card className="bg-white border-border overflow-hidden shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl text-foreground">
+              <MessageSquare className="h-6 w-6 text-primary" />
               Message Data
             </CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription>
               Search, filter, and analyze message content from your chat history
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-0 sm:p-6 relative z-10">
+          <CardContent className="p-0 sm:p-6">
             <MessageTable messages={messages} />
           </CardContent>
         </Card>
       </TabsContent>
       
       <TabsContent value="threads" className="mt-6 animate-fade-in">
-        <Card className="bg-slate-800/50 border-slate-700 overflow-hidden shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-purple-900/10 z-0"></div>
-          <CardHeader className="relative z-10">
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <MessageSquare className="h-6 w-6 text-blue-400" />
+        <Card className="bg-white border-border overflow-hidden shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl text-foreground">
+              <MessageSquare className="h-6 w-6 text-primary" />
               Threaded Message View
             </CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription>
               View messages in a threaded format with conversations and topics
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-0 sm:p-6 relative z-10">
+          <CardContent className="p-0 sm:p-6">
             <ThreadedMessageView messages={messages} />
           </CardContent>
         </Card>
       </TabsContent>
       
       <TabsContent value="chat" className="mt-6 animate-fade-in">
-        <Card className="bg-slate-800/50 border-slate-700 overflow-hidden shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-purple-900/10 z-0"></div>
-          <CardHeader className="relative z-10">
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <MessageSquare className="h-6 w-6 text-blue-400" />
+        <Card className="bg-white border-border overflow-hidden shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl text-foreground">
+              <MessageSquare className="h-6 w-6 text-primary" />
               AIDatagem Chat
             </CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription>
               Interact with your data using natural language queries
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-0 relative z-10">
+          <CardContent className="p-0">
             <div className="h-[600px]">
               <Chat />
             </div>
@@ -177,18 +171,17 @@ export function DashboardContent({
       </TabsContent>
       
       <TabsContent value="visualization" className="mt-6 animate-fade-in">
-        <Card className="bg-slate-800/50 border-slate-700 overflow-hidden shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-purple-900/10 z-0"></div>
-          <CardHeader className="relative z-10">
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <BarChart2 className="h-6 w-6 text-blue-400" />
+        <Card className="bg-white border-border overflow-hidden shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl text-foreground">
+              <BarChart2 className="h-6 w-6 text-primary" />
               Embedding Visualization
             </CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription>
               Visual representation of message embeddings in 2D space
             </CardDescription>
           </CardHeader>
-          <CardContent className="h-[600px] relative z-10">
+          <CardContent className="h-[600px]">
             <EmbeddingVisualizer data={visualizationData} />
           </CardContent>
         </Card>

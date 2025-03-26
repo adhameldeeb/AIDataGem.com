@@ -10,12 +10,12 @@ interface DashboardFooterProps {
 
 export function DashboardFooter({ dbSetupComplete }: DashboardFooterProps) {
   return (
-    <div className="bg-[#1a1d2a]/70 p-4 rounded-xl backdrop-blur-sm border border-slate-700/50 shadow-xl">
+    <div className="bg-white p-4 rounded-xl border border-border shadow-soft">
       <div className="flex flex-col md:flex-row justify-between items-center gap-2 text-center md:text-left">
         <div>
-          <p className="text-md font-medium text-slate-300">AIDatagem - Transforming Data into Gems of Insight</p>
-          <p className="flex items-center justify-center md:justify-start gap-1 text-sm text-slate-400">
-            <ShieldCheck className="h-4 w-4 text-green-400" />
+          <p className="text-md font-medium text-foreground">AIDatagem - Transforming Data into Gems of Insight</p>
+          <p className="flex items-center justify-center md:justify-start gap-1 text-sm text-muted-foreground">
+            <ShieldCheck className="h-4 w-4 text-green-500" />
             {dbSetupComplete ? 
               "Connected to Supabase Database" : 
               "Database setup required"
@@ -28,7 +28,7 @@ export function DashboardFooter({ dbSetupComplete }: DashboardFooterProps) {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-slate-400 hover:text-slate-200"
+            className="text-muted-foreground hover:text-foreground"
             onClick={() => window.open('https://github.com/your-repo/aidatagem', '_blank')}
           >
             <ExternalLink className="h-4 w-4 mr-2" />
@@ -38,7 +38,7 @@ export function DashboardFooter({ dbSetupComplete }: DashboardFooterProps) {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-slate-400 hover:text-slate-200"
+            className="text-muted-foreground hover:text-foreground"
           >
             <Heart className="h-4 w-4 mr-2 text-red-400" />
             Support
