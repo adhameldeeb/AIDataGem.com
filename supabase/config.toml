@@ -1,1 +1,14 @@
+
 project_id = "zkbgklcgoaqgsglzpkjx"
+[functions.get_service_status]
+verify_jwt = false
+[functions.get_app_info]
+verify_jwt = false
+[functions.upsert_data]
+verify_jwt = false
+[functions.fetch_all_data]
+verify_jwt = false
+[functions.fetch_ordered_data]
+verify_jwt = false
+[functions.delete_all_data]
+verify_jwt = false

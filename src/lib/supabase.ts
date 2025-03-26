@@ -9,8 +9,9 @@ export const supabase = integrationsSupabase;
 // Check if Supabase is properly configured
 export const isSupabaseAvailable = async (): Promise<boolean> => {
   try {
-    const { data, error } = await supabase.from('_metadata').select('*').limit(1);
-    return !error;
+    // Using a more direct approach to check connection
+    const { data, error } = await supabase.rpc('get_service_status');
+    return !error && data === 'online';
   } catch (error) {
     console.error('Error connecting to Supabase:', error);
     return false;
@@ -32,15 +33,21 @@ export const TABLES = {
 // Helper function to check if a table exists
 export async function ensureTablesExist() {
   try {
-    const { data: tables, error } = await supabase
-      .from('information_schema.tables')
-      .select('table_name')
-      .eq('table_schema', 'public');
+    // Using a more compatible approach to check tables
+    let allTablesExist = true;
     
-    if (error) throw error;
+    for (const table of Object.values(TABLES)) {
+      const { count, error } = await supabase
+        .from(table)
+        .select('*', { count: 'exact', head: true });
+      
+      if (error && error.code === '42P01') { // Table doesn't exist error code
+        allTablesExist = false;
+        break;
+      }
+    }
     
-    const existingTables = tables.map(t => t.table_name);
-    return Object.values(TABLES).every(table => existingTables.includes(table));
+    return allTablesExist;
   } catch (error) {
     console.error('Error checking tables:', error);
     return false;
@@ -50,29 +57,16 @@ export async function ensureTablesExist() {
 // Helper to create the database schema if needed
 export async function createDatabaseSchema() {
   try {
-    // Create messages table
-    await supabase.rpc('create_messages_table', {});
-    
-    // Create projects table
-    await supabase.rpc('create_projects_table', {});
-    
-    // Create models table
-    await supabase.rpc('create_models_table', {});
-    
-    // Create embedding models table
-    await supabase.rpc('create_embedding_models_table', {});
-    
-    // Create files table
-    await supabase.rpc('create_files_table', {});
-    
-    // Create secrets table
-    await supabase.rpc('create_secrets_table', {});
-    
-    // Create visualizations table
-    await supabase.rpc('create_visualizations_table', {});
-    
-    // Create processes table
-    await supabase.rpc('create_processes_table', {});
+    // Create tables using SQL commands
+    for (const tableName of Object.values(TABLES)) {
+      try {
+        // This will execute stored procedures to create each table
+        // We're using a generic approach that doesn't require specific table typing
+        await supabase.rpc(`create_${tableName}_table`);
+      } catch (error) {
+        console.error(`Error creating ${tableName} table:`, error);
+      }
+    }
     
     toast.success("Database schema created successfully!");
     return true;

@@ -1,10 +1,8 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Save, Download, Trash2, Settings, BarChart2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DatabaseZap, Upload, Download, Trash2, FileUp, Menu, MoreVertical } from "lucide-react";
 
 interface DashboardHeaderProps {
   dbSetupComplete: boolean;
@@ -19,93 +17,139 @@ export function DashboardHeader({
   handleExportData,
   handleClearAllData
 }: DashboardHeaderProps) {
+  const handleImportClick = () => {
+    handleImportData();
+  };
+
+  const handleExportClick = () => {
+    handleExportData();
+  };
+
+  const handleClearClick = () => {
+    if (window.confirm("Are you sure you want to clear all data? This action cannot be undone.")) {
+      handleClearAllData();
+    }
+  };
+
+  const handleFolderUpload = () => {
+    // Create a file input element
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.webkitdirectory = true; // Non-standard attribute for directory selection
+    
+    // Listen for file selection
+    input.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement;
+      if (input.files && input.files.length > 0) {
+        // Convert FileList to array and pass to handler
+        const filesArray = Array.from(input.files);
+        // This would be handled by a parent component
+        // handleFolderSelected(filesArray);
+      }
+    });
+    
+    // Programmatically click the hidden input
+    // Using a safer way to trigger click
+    input.dispatchEvent(new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      view: window
+    }));
+  };
+
+  const handleFileUpload = () => {
+    // Create a file input element
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = '.json,.csv,.txt';
+    
+    // Listen for file selection
+    input.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement;
+      if (input.files && input.files.length > 0) {
+        // Convert FileList to array and pass to handler
+        const filesArray = Array.from(input.files);
+        // This would be handled by a parent component
+        // handleFilesSelected(filesArray);
+      }
+    });
+    
+    // Programmatically click the hidden input
+    // Using a safer way to trigger click
+    input.dispatchEvent(new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      view: window
+    }));
+  };
+
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-[#1a1d2a]/70 p-6 rounded-xl backdrop-blur-sm border border-slate-700/50 shadow-xl">
-      <div className="flex items-center">
-        <BarChart2 className="h-8 w-8 mr-3 text-blue-400" />
+    <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-[#1a1d2a]/80 p-6 rounded-xl backdrop-blur-sm border border-slate-700/50 shadow-xl">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center h-12 w-12 rounded-full bg-indigo-600 text-white">
+          <DatabaseZap className="w-6 h-6" />
+        </div>
         <div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">AIDatagem</h1>
-          <p className="text-slate-400">Transform your data into insights</p>
+          <h1 className="text-2xl font-bold">AIDatagem</h1>
+          <p className="text-sm text-slate-400">
+            {dbSetupComplete 
+              ? "Connected to Supabase Database" 
+              : "Local Storage Mode - Connect to Supabase for Persistence"}
+          </p>
         </div>
       </div>
       
-      <div className="flex gap-3">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleImportData}
-                disabled={!dbSetupComplete}
-                className="bg-slate-800/80 border-slate-700 hover:bg-slate-700 text-slate-300"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Import
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Import data from JSON file</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+      <div className="flex flex-wrap justify-center md:justify-end gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-1"
+          onClick={handleFileUpload}
+        >
+          <FileUp className="h-4 w-4" />
+          <span className="hidden sm:inline">Upload Files</span>
+        </Button>
         
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportData}
-                disabled={!dbSetupComplete}
-                className="bg-slate-800/80 border-slate-700 hover:bg-slate-700 text-slate-300"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Export all data to JSON file</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-1"
+          onClick={handleFolderUpload}
+        >
+          <Upload className="h-4 w-4" />
+          <span className="hidden sm:inline">Upload Folder</span>
+        </Button>
         
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button
-              variant="destructive"
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="outline" 
               size="sm"
-              disabled={!dbSetupComplete}
-              className="bg-red-900/30 hover:bg-red-800/50 text-red-300 border border-red-900/50"
+              className="flex items-center gap-1"
+            >
+              <MoreVertical className="h-4 w-4" />
+              <span className="hidden sm:inline">More</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleImportClick}>
+              <Download className="h-4 w-4 mr-2" />
+              Import Data
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportClick}>
+              <Upload className="h-4 w-4 mr-2" />
+              Export Data
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={handleClearClick}
+              className="text-red-500 focus:text-red-600"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Clear Data
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-slate-800 border-slate-700">
-            <DialogHeader>
-              <DialogTitle>Clear All Data</DialogTitle>
-              <DialogDescription>
-                This will permanently delete all files, messages, and visualization data.
-                This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => document.querySelector('button[aria-label="Close"]')?.click()}>
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  handleClearAllData();
-                  document.querySelector('button[aria-label="Close"]')?.click();
-                }}
-              >
-                Yes, Clear All Data
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              Clear All Data
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

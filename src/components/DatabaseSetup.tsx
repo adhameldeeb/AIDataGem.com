@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,12 +40,28 @@ export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
         return;
       }
       
-      const { data: projectRef } = await supabase.from('_metadata').select('name').single();
-      
-      setDbInfo(prev => ({
-        ...prev,
-        project: projectRef?.name || "Unknown"
-      }));
+      try {
+        // Try to get project information (may fail silently)
+        const { data: appInfo } = await supabase.rpc('get_app_info');
+        
+        if (appInfo && typeof appInfo === 'object') {
+          setDbInfo(prev => ({
+            ...prev,
+            project: appInfo.name || "AIDatagem"
+          }));
+        } else {
+          setDbInfo(prev => ({
+            ...prev,
+            project: "AIDatagem"
+          }));
+        }
+      } catch (e) {
+        // If we can't get the app info, just use a default name
+        setDbInfo(prev => ({
+          ...prev,
+          project: "AIDatagem"
+        }));
+      }
       
       setProgress(40);
       

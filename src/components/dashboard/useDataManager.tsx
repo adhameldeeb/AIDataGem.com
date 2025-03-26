@@ -23,7 +23,8 @@ export function useDataManager(dbSetupComplete: boolean) {
   useEffect(() => {
     const checkSupabaseConnection = async () => {
       try {
-        const { data, error } = await supabase.from('_metadata').select('*').limit(1);
+        // Simplified connection check
+        const { data, error } = await supabase.rpc('get_service_status');
         
         if (error) throw error;
         
