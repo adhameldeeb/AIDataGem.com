@@ -1,28 +1,13 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { supabase as integrationsSupabase } from '@/integrations/supabase/client';
 
-// Initialize the Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Check if environment variables are available
-const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
-
-if (!isSupabaseConfigured) {
-  console.warn('Supabase environment variables are missing. Features requiring Supabase will be disabled.');
-}
-
-// Create client with fallbacks to prevent runtime errors
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder-url.supabase.co', // Placeholder that won't be used
-  supabaseAnonKey || 'placeholder-key' // Placeholder that won't be used
-);
+// Use the client from the integrations folder which has the proper credentials
+export const supabase = integrationsSupabase;
 
 // Check if Supabase is properly configured
 export const isSupabaseAvailable = async (): Promise<boolean> => {
-  if (!isSupabaseConfigured) return false;
-  
   try {
     const { data, error } = await supabase.from('_metadata').select('*').limit(1);
     return !error;
@@ -47,8 +32,6 @@ export const TABLES = {
 // Helper function to check if a table exists
 export async function ensureTablesExist() {
   try {
-    if (!isSupabaseConfigured) return false;
-    
     const { data: tables, error } = await supabase
       .from('information_schema.tables')
       .select('table_name')
@@ -67,11 +50,6 @@ export async function ensureTablesExist() {
 // Helper to create the database schema if needed
 export async function createDatabaseSchema() {
   try {
-    if (!isSupabaseConfigured) {
-      toast.error('Cannot create database schema: Supabase is not configured');
-      return false;
-    }
-    
     // Create messages table
     await supabase.rpc('create_messages_table', {});
     
@@ -96,6 +74,7 @@ export async function createDatabaseSchema() {
     // Create processes table
     await supabase.rpc('create_processes_table', {});
     
+    toast.success("Database schema created successfully!");
     return true;
   } catch (error) {
     console.error('Error creating database schema:', error);
