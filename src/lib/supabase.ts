@@ -28,7 +28,8 @@ export const TABLES = {
   SECRETS: 'secrets',
   VISUALIZATIONS: 'visualizations',
   PROCESSES: 'processes',
-  CONVERSATIONS: 'conversations'
+  CONVERSATIONS: 'conversations',
+  STATS: 'stats'  // Added the missing STATS property
 };
 
 // Helper function to check if tables exist
