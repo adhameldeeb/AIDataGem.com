@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Documentation from "./pages/Documentation";
 import ArchitecturePage from "./pages/ArchitecturePage";
+import SupabaseSetup from "./pages/SupabaseSetup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/documentation" element={<Documentation />} />
           <Route path="/architecture" element={<ArchitecturePage />} />
+          <Route path="/supabase-setup" element={<SupabaseSetup />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

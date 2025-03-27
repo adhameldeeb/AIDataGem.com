@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,10 +46,9 @@ export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
       
       try {
         // Try to get project information (may fail silently)
-        const { data, error } = await supabase.rpc('get_app_info');
-        const appInfo = data as AppInfo | null;
-        
-        if (appInfo && typeof appInfo === 'object') {
+        const { data } = await supabase.functions.invoke('get_app_info');
+        if (data && typeof data === 'object') {
+          const appInfo = data as AppInfo;
           setDbInfo(prev => ({
             ...prev,
             project: appInfo.name || "AIDatagem"

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -16,6 +15,7 @@ import { ProjectManager } from "@/components/ProjectManager";
 import { SecretsManager } from "@/components/SecretsManager";
 import { DatabaseSetup } from "@/components/DatabaseSetup";
 import { UploadedFile, UploadStats, Message } from "@/lib/types";
+import { SupabaseConnector } from "@/components/SupabaseConnector";
 
 interface DashboardContentProps {
   dbSetupComplete: boolean;

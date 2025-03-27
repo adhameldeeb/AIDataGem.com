@@ -22,7 +22,7 @@ export const isSupabaseAvailable = async (): Promise<boolean> => {
 export const TABLES = {
   MESSAGES: 'messages',
   PROJECTS: 'projects',
-  MODELS: 'llm_models',
+  MODELS: 'models',
   EMBEDDING_MODELS: 'embedding_models',
   FILES: 'files',
   SECRETS: 'secrets',
