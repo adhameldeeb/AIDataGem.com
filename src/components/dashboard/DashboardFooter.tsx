@@ -1,6 +1,7 @@
 
 import React from "react";
-import { ShieldCheck, Heart, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ShieldCheck, Heart, ExternalLink, BookOpen } from "lucide-react";
 import { vectorDb } from "@/lib/vectorDb";
 import { Button } from "@/components/ui/button";
 
@@ -25,6 +26,17 @@ export function DashboardFooter({ dbSetupComplete }: DashboardFooterProps) {
         </div>
         
         <div className="flex items-center gap-3">
+          <Link to="/documentation">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Documentation
+            </Button>
+          </Link>
+          
           <Button 
             variant="ghost" 
             size="sm" 
@@ -32,7 +44,7 @@ export function DashboardFooter({ dbSetupComplete }: DashboardFooterProps) {
             onClick={() => window.open('https://github.com/your-repo/aidatagem', '_blank')}
           >
             <ExternalLink className="h-4 w-4 mr-2" />
-            Documentation
+            GitHub
           </Button>
           
           <Button 
