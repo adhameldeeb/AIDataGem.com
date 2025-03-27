@@ -2,7 +2,6 @@
 import { BaseStorageService } from './BaseStorageService';
 import { TABLES } from '../supabase';
 import { EmbeddingVisualizationData } from '../types';
-import { supabase } from '../supabase';
 
 export class VisualizationStorageService extends BaseStorageService {
   constructor() {
@@ -13,21 +12,15 @@ export class VisualizationStorageService extends BaseStorageService {
     try {
       await this.upsertData(data);
     } catch (error) {
-      console.error('Error saving visualization data to Supabase:', error);
+      console.error('Error saving visualization data:', error);
     }
   }
   
   async loadVisualizationData(): Promise<EmbeddingVisualizationData[]> {
     try {
-      const { data, error } = await supabase
-        .from(TABLES.VISUALIZATIONS)
-        .select('*');
-        
-      if (error) throw error;
-      
-      return data || [];
+      return await this.loadData<EmbeddingVisualizationData>();
     } catch (error) {
-      console.error('Error loading visualization data from Supabase:', error);
+      console.error('Error loading visualization data:', error);
       return [];
     }
   }

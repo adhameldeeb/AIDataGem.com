@@ -1,8 +1,20 @@
 
 import { BaseStorageService } from './BaseStorageService';
 import { TABLES } from '../supabase';
-import { supabase } from '../supabase';
 import { Process } from '../types';
+
+interface ProcessRecord {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  progress: number;
+  start_time: string;
+  end_time?: string | null;
+  error?: string | null;
+  metadata?: Record<string, any> | null;
+  result?: any | null;
+}
 
 export class ProcessStorageService extends BaseStorageService {
   constructor() {
@@ -11,41 +23,34 @@ export class ProcessStorageService extends BaseStorageService {
 
   async saveProcess(process: Process): Promise<void> {
     try {
-      const { error } = await supabase
-        .from(this.tableName)
-        .upsert({
-          id: process.id,
-          name: process.name,
-          type: process.type,
-          status: process.status,
-          progress: process.progress,
-          start_time: process.startTime.toISOString(),
-          end_time: process.endTime ? process.endTime.toISOString() : null,
-          error: process.error || null,
-          metadata: process.metadata || null,
-          result: process.result || null
-        });
+      const processRecord: ProcessRecord = {
+        id: process.id,
+        name: process.name,
+        type: process.type,
+        status: process.status,
+        progress: process.progress,
+        start_time: process.startTime.toISOString(),
+        end_time: process.endTime ? process.endTime.toISOString() : null,
+        error: process.error || null,
+        metadata: process.metadata || null,
+        result: process.result || null
+      };
 
-      if (error) throw error;
+      await this.upsertData(processRecord);
     } catch (error) {
-      console.error('Error saving process to Supabase:', error);
+      console.error('Error saving process:', error);
     }
   }
 
   async loadProcesses(): Promise<Process[]> {
     try {
-      const { data, error } = await supabase
-        .from(this.tableName)
-        .select('*')
-        .order('start_time', { ascending: false });
-
-      if (error) throw error;
-
-      return (data || []).map(item => ({
+      const processes = await this.loadDataWithOrder<ProcessRecord>('start_time', false);
+      
+      return processes.map(item => ({
         id: item.id,
         name: item.name,
-        type: item.type,
-        status: item.status,
+        type: item.type as Process['type'],
+        status: item.status as Process['status'],
         progress: item.progress,
         startTime: new Date(item.start_time),
         endTime: item.end_time ? new Date(item.end_time) : undefined,
@@ -54,7 +59,7 @@ export class ProcessStorageService extends BaseStorageService {
         result: item.result
       }));
     } catch (error) {
-      console.error('Error loading processes from Supabase:', error);
+      console.error('Error loading processes:', error);
       return [];
     }
   }
@@ -66,7 +71,7 @@ export class ProcessStorageService extends BaseStorageService {
         await this.saveProcess(process);
       }
     } catch (error) {
-      console.error('Error saving processes to Supabase:', error);
+      console.error('Error saving processes:', error);
     }
   }
 }

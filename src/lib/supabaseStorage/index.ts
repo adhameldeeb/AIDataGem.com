@@ -8,7 +8,6 @@ import { ProjectStorageService } from './ProjectStorageService';
 import { SecretStorageService } from './SecretStorageService';
 import { ProcessStorageService } from './ProcessStorageService';
 import { supabase } from '../supabase';
-import { TABLES } from '../supabase';
 
 // Create instances of each service
 const messageService = new MessageStorageService();
@@ -65,16 +64,12 @@ export const supabaseStorageService = {
   // Clear all data
   clearAll: async () => {
     try {
-      // Clear each table
-      for (const table of Object.values(TABLES)) {
-        const { error } = await supabase
-          .from(table)
-          .delete()
-          .neq('id', 'placeholder'); // Delete all rows
-          
-        if (error) {
-          console.error(`Error clearing table ${table}:`, error);
-        }
+      // Call the edge function to clear all data
+      const { error } = await supabase.functions.invoke('clear_all_data', {});
+      
+      if (error) {
+        console.error(`Error clearing all data:`, error);
+        return false;
       }
       
       return true;

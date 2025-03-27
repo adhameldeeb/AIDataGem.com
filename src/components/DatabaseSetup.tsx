@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,11 @@ import { Database, Server, ArrowRight, CheckCircle2, RefreshCw, AlertTriangle, I
 
 interface DatabaseSetupProps {
   onComplete?: () => void;
+}
+
+interface AppInfo {
+  name?: string;
+  [key: string]: any;
 }
 
 export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
@@ -42,7 +46,8 @@ export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
       
       try {
         // Try to get project information (may fail silently)
-        const { data: appInfo } = await supabase.rpc('get_app_info');
+        const response = await supabase.rpc('get_app_info');
+        const appInfo = response.data as AppInfo | null;
         
         if (appInfo && typeof appInfo === 'object') {
           setDbInfo(prev => ({

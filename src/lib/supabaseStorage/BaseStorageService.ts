@@ -4,18 +4,21 @@ import { supabase } from '../supabase';
 export class BaseStorageService {
   constructor(protected tableName: string) {}
 
-  protected async upsertData<T>(data: T[], idField: string = 'id'): Promise<void> {
+  protected async upsertData<T extends Record<string, any>>(data: T | T[]): Promise<void> {
     try {
-      // Using Edge Function for data operations
-      await Promise.all(data.map(async (item) => {
+      // Convert single item to array for consistent handling
+      const dataArray = Array.isArray(data) ? data : [data];
+      
+      // Use batch processing for multiple items
+      if (dataArray.length > 0) {
+        // Call the edge function to handle the data upsert
         await supabase.functions.invoke('upsert_data', {
           body: {
-            p_table_name: this.tableName,
-            p_data: item,
-            p_id_field: idField
+            table_name: this.tableName,
+            data: dataArray
           }
         });
-      }));
+      }
     } catch (error) {
       console.error(`Error upserting data to ${this.tableName}:`, error);
     }
@@ -23,14 +26,13 @@ export class BaseStorageService {
 
   protected async loadData<T>(): Promise<T[]> {
     try {
-      // Using Edge Function for data operations
       const { data, error } = await supabase.functions.invoke('fetch_all_data', {
-        body: { p_table_name: this.tableName }
+        body: { table_name: this.tableName }
       });
       
       if (error) throw error;
       
-      return data || [];
+      return data as T[] || [];
     } catch (error) {
       console.error(`Error loading data from ${this.tableName}:`, error);
       return [];
@@ -39,18 +41,17 @@ export class BaseStorageService {
 
   protected async loadDataWithOrder<T>(orderField: string, ascending: boolean = true): Promise<T[]> {
     try {
-      // Using Edge Function for data operations
       const { data, error } = await supabase.functions.invoke('fetch_ordered_data', {
         body: {
-          p_table_name: this.tableName,
-          p_order_field: orderField,
-          p_ascending: ascending
+          table_name: this.tableName,
+          order_field: orderField,
+          ascending: ascending
         }
       });
       
       if (error) throw error;
       
-      return data || [];
+      return data as T[] || [];
     } catch (error) {
       console.error(`Error loading data from ${this.tableName}:`, error);
       return [];
@@ -59,9 +60,8 @@ export class BaseStorageService {
 
   protected async deleteAllData(): Promise<void> {
     try {
-      // Using Edge Function for data operations
       await supabase.functions.invoke('delete_all_data', {
-        body: { p_table_name: this.tableName }
+        body: { table_name: this.tableName }
       });
     } catch (error) {
       console.error(`Error clearing data from ${this.tableName}:`, error);

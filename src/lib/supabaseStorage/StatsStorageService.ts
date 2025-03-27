@@ -1,47 +1,50 @@
 
-import { supabase } from '../supabase';
 import { UploadStats } from '../types';
+import { BaseStorageService } from './BaseStorageService';
+import { TABLES } from '../supabase';
 
-export class StatsStorageService {
-  private tableName = 'stats';
+interface StatsRecord extends UploadStats {
+  id: string;
+}
+
+export class StatsStorageService extends BaseStorageService {
+  constructor() {
+    super(TABLES.STATS);
+  }
 
   async saveStats(stats: UploadStats): Promise<void> {
     try {
       // We'll store stats in a special row with id='current'
-      const { error } = await supabase
-        .from(this.tableName)
-        .upsert({ 
-          id: 'current',
-          ...stats
-        }, { 
-          onConflict: 'id',
-          ignoreDuplicates: false
-        });
+      const statsRecord: StatsRecord = {
+        id: 'current',
+        ...stats
+      };
       
-      if (error) throw error;
+      await this.upsertData(statsRecord);
     } catch (error) {
-      console.error('Error saving stats to Supabase:', error);
+      console.error('Error saving stats:', error);
     }
   }
 
   async loadStats(): Promise<UploadStats> {
     try {
-      const { data, error } = await supabase
-        .from(this.tableName)
-        .select('*')
-        .eq('id', 'current')
-        .single();
+      const stats = await this.loadData<StatsRecord>();
+      const currentStats = stats.find(s => s.id === 'current');
       
-      if (error) throw error;
+      if (currentStats) {
+        // Remove the id property before returning
+        const { id, ...uploadStats } = currentStats;
+        return uploadStats;
+      }
       
-      return data || {
+      return {
         totalFiles: 0,
         processedFiles: 0,
         totalMessages: 0,
         processedMessages: 0
       };
     } catch (error) {
-      console.error('Error loading stats from Supabase:', error);
+      console.error('Error loading stats:', error);
       return {
         totalFiles: 0,
         processedFiles: 0,
