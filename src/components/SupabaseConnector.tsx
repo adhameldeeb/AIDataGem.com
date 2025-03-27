@@ -32,8 +32,9 @@ export function SupabaseConnector({ onConnect }: SupabaseConnectorProps) {
       // Create a temporary Supabase client to test the connection
       const supabase = createClient(url, key);
       
-      // Simple query to test connection
-      const { error } = await supabase.from('_dummy_query').select('*').limit(1).catch(() => ({ error: { message: "Connection failed" }}));
+      // Simple query to test connection - .catch() is not available on this object
+      // Instead, check the error property of the returned object
+      const { data, error } = await supabase.from('_dummy_query').select('*').limit(1);
       
       // If there's an error about tables not existing, that's actually okay
       // It means the credentials are valid but tables aren't set up yet
