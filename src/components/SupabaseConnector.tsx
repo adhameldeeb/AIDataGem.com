@@ -1,12 +1,11 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Database, Shield, AlertCircle } from "lucide-react";
-import { createClient } from '@supabase/supabase-js';
+import { Database } from "lucide-react";
 
 interface SupabaseConnectorProps {
   onConnect?: () => void;
@@ -16,48 +15,6 @@ export function SupabaseConnector({ onConnect }: SupabaseConnectorProps) {
   const [supabaseUrl, setSupabaseUrl] = useState("");
   const [supabaseAnonKey, setSupabaseAnonKey] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
-
-  // Load saved credentials if they exist
-  useEffect(() => {
-    const savedUrl = localStorage.getItem("SUPABASE_URL");
-    const savedKey = localStorage.getItem("SUPABASE_ANON_KEY");
-    
-    if (savedUrl) setSupabaseUrl(savedUrl);
-    if (savedKey) setSupabaseAnonKey(savedKey);
-  }, []);
-
-  const testConnection = async (url: string, key: string) => {
-    try {
-      // Create a temporary Supabase client to test the connection
-      const supabase = createClient(url, key);
-      
-      // Simple query to test connection
-      const { error } = await supabase.from('_dummy_query').select('*').limit(1).catch(() => ({ error: { message: "Connection failed" }}));
-      
-      // If there's an error about tables not existing, that's actually okay
-      // It means the credentials are valid but tables aren't set up yet
-      if (error && error.message && (
-        error.message.includes("does not exist") || 
-        error.message.includes("relation") ||
-        error.code === "42P01" // PostgreSQL code for undefined table
-      )) {
-        return { success: true };
-      }
-      
-      if (error && !error.message.includes("does not exist")) {
-        throw new Error(error.message || "Connection failed");
-      }
-      
-      return { success: true };
-    } catch (error) {
-      console.error("Connection test error:", error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : "Unknown connection error" 
-      };
-    }
-  };
 
   const handleConnect = async () => {
     if (!supabaseUrl || !supabaseAnonKey) {
@@ -66,44 +23,25 @@ export function SupabaseConnector({ onConnect }: SupabaseConnectorProps) {
     }
 
     setIsConnecting(true);
-    setConnectionError(null);
     
     try {
-      // Test the connection first
-      const testResult = await testConnection(supabaseUrl, supabaseAnonKey);
-      
-      if (!testResult.success) {
-        setConnectionError(testResult.error || "Connection failed. Please check your credentials.");
-        toast.error("Failed to connect to Supabase", {
-          description: testResult.error || "Please verify your URL and key"
-        });
-        setIsConnecting(false);
-        return;
-      }
-      
-      // Save the credentials
+      // Create and update the integrations/supabase/client.ts file
+      // In Lovable, we would use environment variables, but for now we'll
+      // demonstrate connecting with direct values
       localStorage.setItem("SUPABASE_URL", supabaseUrl);
       localStorage.setItem("SUPABASE_ANON_KEY", supabaseAnonKey);
       
-      // Update the client.ts file (in a real environment this would be done differently)
-      // In Lovable, for demonstration we'll just use localStorage and reload
-      
-      toast.success("Supabase connection successful", {
-        description: "Your credentials have been saved"
+      toast.success("Supabase connection details saved", {
+        description: "Refresh the page to connect to your Supabase project"
       });
 
-      // Delay slightly to allow the toast to be seen
-      setTimeout(() => {
-        if (onConnect) {
-          onConnect();
-        }
-      }, 1000);
+      if (onConnect) {
+        onConnect();
+      }
     } catch (error) {
       console.error("Error connecting to Supabase:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      setConnectionError(errorMessage);
       toast.error("Failed to connect to Supabase", {
-        description: errorMessage
+        description: error instanceof Error ? error.message : "Unknown error"
       });
     } finally {
       setIsConnecting(false);
@@ -147,28 +85,6 @@ export function SupabaseConnector({ onConnect }: SupabaseConnectorProps) {
           />
           <p className="text-xs text-slate-400">
             This is your project's anon/public API key
-          </p>
-        </div>
-
-        {connectionError && (
-          <div className="bg-red-900/20 border border-red-800/30 rounded-md p-3 flex items-start gap-2">
-            <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <span className="font-medium text-red-400">Connection error</span>
-              <p className="text-red-300/80 mt-1">{connectionError}</p>
-            </div>
-          </div>
-        )}
-
-        <div className="bg-slate-700/30 p-4 rounded-md border border-slate-700 space-y-2">
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-amber-400" />
-            <span className="text-sm font-medium">Important Note</span>
-          </div>
-          <p className="text-xs text-slate-400">
-            We'll create all necessary database tables and storage once connected. 
-            If this is a new Supabase project, don't worry about missing tables - 
-            our setup will create everything needed.
           </p>
         </div>
       </CardContent>

@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { supabase, ensureTablesExist, createDatabaseSchema, TABLES } from "@/lib/supabase";
+import { supabase, ensureTablesExist, createDatabaseSchema, isSupabaseAvailable } from "@/lib/supabase";
 import { supabaseStorageService } from "@/lib/supabaseStorage";
 import { storageService } from "@/lib/storageService";
 import { toast } from "sonner";
@@ -37,54 +36,45 @@ export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
       setStage("checking");
       setProgress(20);
       
-      // Try to connect to Supabase - don't worry if this fails with table-not-found errors
+      const available = await isSupabaseAvailable();
+      
+      if (!available) {
+        setStage("not-configured");
+        setError("Supabase environment variables are missing or connection failed");
+        return;
+      }
+      
       try {
-        // If we can connect to Supabase at all, consider it a success
-        const { data, error } = await supabase.functions.invoke('get_service_status');
-        
-        if (error && !error.message?.includes('does not exist')) {
-          console.error("Supabase connection error:", error);
-          throw new Error(`Connection failed: ${error.message}`);
-        }
-        
-        try {
-          // Try to get project information (may fail silently)
-          const { data } = await supabase.functions.invoke('get_app_info');
-          if (data && typeof data === 'object') {
-            const appInfo = data as AppInfo;
-            setDbInfo(prev => ({
-              ...prev,
-              project: appInfo.name || "AIDatagem"
-            }));
-          }
-        } catch (e) {
-          console.log("Could not get app info, using default name");
+        // Try to get project information (may fail silently)
+        const { data } = await supabase.functions.invoke('get_app_info');
+        if (data && typeof data === 'object') {
+          const appInfo = data as AppInfo;
+          setDbInfo(prev => ({
+            ...prev,
+            project: appInfo.name || "AIDatagem"
+          }));
+        } else {
           setDbInfo(prev => ({
             ...prev,
             project: "AIDatagem"
           }));
         }
-      } catch (error) {
-        console.error("Supabase connection error:", error);
-        setStage("not-configured");
-        setError(error instanceof Error ? error.message : "Supabase connection failed");
-        return;
+      } catch (e) {
+        // If we can't get the app info, just use a default name
+        setDbInfo(prev => ({
+          ...prev,
+          project: "AIDatagem"
+        }));
       }
       
       setProgress(40);
       
-      // Try to check if tables exist, but don't worry if this fails
-      let tablesExist = false;
-      try {
-        tablesExist = await ensureTablesExist();
-      } catch (error) {
-        console.log("Tables don't exist yet, will create them:", error);
-      }
+      const tablesExist = await ensureTablesExist();
       
       if (tablesExist) {
         setProgress(100);
         setStage("complete");
-        if (onComplete) onComplete();
+        onComplete?.();
       } else {
         setProgress(50);
         setStage("creating");
@@ -107,7 +97,7 @@ export function DatabaseSetup({ onComplete }: DatabaseSetupProps) {
       
       setProgress(100);
       setStage("complete");
-      if (onComplete) onComplete();
+      onComplete?.();
       
       toast.success("Database setup complete and data migrated", {
         description: "Your Supabase database is ready to use"
